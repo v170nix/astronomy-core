@@ -8,6 +8,9 @@ version = "0.0.1-SNAPSHOT"
 repositories {
     mavenCentral()
 }
+//dependencies {
+//    implementation("junit:junit:4.13.1")
+//}
 
 kotlin {
     jvm {
@@ -19,10 +22,19 @@ kotlin {
         }
     }
     js(IR) {
-        binaries.library()
-        browser {
+//        binaries.library()
+        nodejs {
 
         }
+        compilations.all {
+//            kotlinOptions {
+//                sourceMap = true
+//                moduleKind = "umd"
+//                metaInfo = true
+//            }
+//            compileKotlinTask.kotlinOptions.freeCompilerArgs += listOf("-Xerror-tolerance-policy=SYNTAX")
+        }
+        binaries.library()
     }
     val hostOs = System.getProperty("os.name")
     val isMingwX64 = hostOs.startsWith("Windows")
@@ -44,7 +56,12 @@ kotlin {
         val jvmMain by getting
         val jvmTest by getting
         val jsMain by getting
-        val jsTest by getting
+        val jsTest by getting {
+            dependencies {
+                implementation("org.jetbrains.kotlin:kotlin-test-js")
+//                implementation(npm("@js-joda/timezone", "2.3.0"))
+            }
+        }
         val nativeMain by getting
         val nativeTest by getting
     }
