@@ -1,5 +1,6 @@
 package net.arwix.urania.core.math.vector
 
+import net.arwix.urania.core.assertContentEquals
 import net.arwix.urania.core.convert
 import net.arwix.urania.core.math.angle.rad
 import net.arwix.urania.core.rectangular
@@ -17,7 +18,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(0.25, 0.75, 0.10952380952380952),
-            resultVector.spherical.toArray(false)
+            resultVector.spherical.toArray(false),
+            1e-14
         )
 
         assertContentEquals(
@@ -35,7 +37,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(0.25, -0.75, -0.23),
-            leftVector.spherical.toArray(false)
+            leftVector.spherical.toArray(false),
+            1e-14
         )
 
         leftVector = SphericalVector(phi = 0.25.rad, theta = (-0.75).rad, r = 0.23)
@@ -43,7 +46,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(0.25, -0.75, 0.10952380952380952),
-            leftVector.spherical.toArray(false)
+            leftVector.spherical.toArray(false),
+            1e-14
         )
     }
 
@@ -65,7 +69,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(-2.338880162566874, -2.195728870782442, -1.824567340168994),
-            resultVector.rectangular.toArray(false)
+            resultVector.rectangular.toArray(false),
+            1e-14
         )
 
         assertContentEquals(
@@ -77,7 +82,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(3.8954326902807646, -0.5171219214165093, 3.690613996023933),
-            leftVector.spherical.toArray(false)
+            leftVector.spherical.toArray(false),
+            1e-14
         )
     }
 
@@ -108,7 +114,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(-5.177470492297332, 2.7145160106425488, -3.9470906290354018),
-            resultVector.rectangular.toArray(false)
+            resultVector.rectangular.toArray(false),
+            1e-14
         )
 
         assertContentEquals(
@@ -125,7 +132,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(-0.8130573097307968, -4.003694031806777, -1.6869415848713059),
-            resultVector.rectangular.toArray(false)
+            resultVector.rectangular.toArray(false),
+            1e-14
         )
 
         assertContentEquals(
@@ -137,7 +145,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(4.512036732051032, -0.39159265358979317, 4.42),
-            leftVector.spherical.toArray(false)
+            leftVector.spherical.toArray(false),
+            1e-14
         )
 
         leftVector = SphericalVector(phi = 20.22.rad, theta = (-2.75).rad, r = 2.21)
@@ -146,7 +155,8 @@ class SphericalVectorTest {
 
         assertContentEquals(
             doubleArrayOf(2.6586993736175835, -0.5938781752824578, 7.053674383217827),
-            leftVector.spherical.toArray(false)
+            leftVector.spherical.toArray(false),
+            1e-14
         )
 
     }
