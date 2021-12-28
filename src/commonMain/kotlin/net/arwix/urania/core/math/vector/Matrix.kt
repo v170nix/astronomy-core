@@ -5,6 +5,7 @@ import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.cos
 import net.arwix.urania.core.math.angle.sin
 import net.arwix.urania.core.math.vector.RectangularVector.Companion.Zero
+import net.arwix.urania.core.rectangular
 import kotlin.jvm.JvmInline
 
 @JvmInline
@@ -15,7 +16,11 @@ value class Matrix(val elements: Array<DoubleArray>) {
     )
 
     constructor(vector1: Vector, vector2: Vector, vector3: Vector) : this(
-        arrayOf(vector1.toArray(false), vector2.toArray(false), vector3.toArray(false))
+        arrayOf(
+            vector1.rectangular.toArray(false),
+            vector2.rectangular.toArray(false),
+            vector3.rectangular.toArray(false)
+        )
     )
 
     inline fun transpose(): Matrix {
@@ -131,7 +136,7 @@ value class Matrix(val elements: Array<DoubleArray>) {
 
 inline operator fun RectangularVector.times(right: Matrix): Vector {
     return Zero.apply {
-        (0..2).forEach { j -> this[j] = (0..2).sumOf { i -> this[i] * right[i, j] } }
+        (0..2).forEach { j -> this[j] = (0..2).sumOf { i -> this@times[i] * right[i, j] } }
     }
 }
 
