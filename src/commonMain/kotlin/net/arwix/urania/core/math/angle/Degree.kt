@@ -12,6 +12,7 @@ value class Degree(val value: Double): Comparable<Degree> {
     inline operator fun div(other: Double) = Degree(value / other)
     inline operator fun div(other: Degree): Double  = value / other.value
     inline operator fun times(other: Double) = Degree(value * other)
+    inline operator fun times(other: Degree): Double = value * other.value
 
     override fun compareTo(other: Degree) = value.compareTo(other.value)
 
@@ -29,6 +30,11 @@ value class Degree(val value: Double): Comparable<Degree> {
     }
 
 }
+
+inline operator fun Double.plus(degree: Degree): Double = this + degree.value
+inline operator fun Double.minus(degree: Degree): Double = this - degree.value
+inline operator fun Double.times(degree: Degree): Double = this * degree.value
+inline operator fun Double.div(other: Degree): Double  = this / other.value
 
 inline val Int.deg: Degree get() = Degree(this.toDouble())
 inline val Double.deg: Degree get() = Degree(this)

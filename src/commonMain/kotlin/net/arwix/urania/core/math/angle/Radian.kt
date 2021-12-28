@@ -1,5 +1,6 @@
 package net.arwix.urania.core.math.angle
 
+import net.arwix.urania.core.calendar.JT
 import kotlin.jvm.JvmInline
 import kotlin.math.PI
 import kotlin.math.floor
@@ -13,6 +14,7 @@ value class Radian(val value: Double): Comparable<Radian> {
     inline operator fun div(other: Double) = Radian(value / other)
     inline operator fun div(other: Radian): Double  = value / other.value
     inline operator fun times(other: Double) = Radian(value * other)
+    inline operator fun times(other: Radian): Double = value * other.value
 
     override fun compareTo(other: Radian) = value.compareTo(other.value)
 
@@ -38,6 +40,11 @@ value class Radian(val value: Double): Comparable<Radian> {
     }
 
 }
+
+inline operator fun Double.plus(radian: Radian): Double = this + radian.value
+inline operator fun Double.minus(radian: Radian): Double = this - radian.value
+inline operator fun Double.times(radian: Radian): Double = this * radian.value
+inline operator fun Double.div(radian: Radian): Double  = this / radian.value
 
 inline fun cos(radian: Radian): Double = kotlin.math.cos(radian.value)
 inline fun sin(radian: Radian): Double = kotlin.math.sin(radian.value)
