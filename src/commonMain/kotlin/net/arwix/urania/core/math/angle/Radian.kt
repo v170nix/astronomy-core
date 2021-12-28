@@ -42,5 +42,5 @@ value class Radian(val value: Double): Comparable<Radian> {
 inline fun cos(radian: Radian): Double = kotlin.math.cos(radian.value)
 inline fun sin(radian: Radian): Double = kotlin.math.sin(radian.value)
 
-inline val Double.asRadian: Radian get() = Radian(this)
-inline val Int.asRadian: Radian get() = Radian(this.toDouble())
+inline val Double.rad: Radian get() = Radian(this)
+inline val Int.rad: Radian get() = Radian(this.toDouble())

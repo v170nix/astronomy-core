@@ -17,7 +17,6 @@ interface Vector {
     @JsName("timesScalar")
     operator fun times(scalar: Double): Vector
     operator fun times(vector: Vector): Vector
-//    operator fun times(right: Matrix): Vector
     operator fun div(scalar: Double): Vector
     infix fun dot(vector: Vector): Double
     fun normalize(): Double = sqrt(this dot this)
@@ -34,9 +33,6 @@ interface Vector {
     operator fun timesAssign(vector: Vector) {
         set(this * vector)
     }
-    //    operator fun timesAssign(matrix: Matrix) {
-//        set(this * matrix)
-//    }
     operator fun divAssign(scalar: Double) {
         set(this / scalar)
     }
@@ -44,4 +40,6 @@ interface Vector {
     operator fun component1(): Double
     operator fun component2(): Double
     operator fun component3(): Double
+
+    fun equalsVector(other: Vector): Boolean
 }

@@ -100,6 +100,16 @@ value class RectangularVector(private val values: DoubleArray): Vector {
         return z
     }
 
+    override fun equalsVector(other: Vector): Boolean {
+        return if (other is RectangularVector) {
+            x == other.x && y == other.y && z == other.z
+        } else {
+            convert<RectangularVector>(other).let {
+                x == it.x && y == it.y && z == it.z
+            }
+        }
+    }
+
     companion object {
         inline val Zero get() = RectangularVector(0.0, 0.0, 0.0)
     }

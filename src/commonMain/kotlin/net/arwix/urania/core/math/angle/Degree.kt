@@ -16,8 +16,8 @@ value class Degree(val value: Double): Comparable<Degree> {
     override fun compareTo(other: Degree) = value.compareTo(other.value)
 
     inline fun normalize(): Degree {
-        if (value < 0.0 && value >= -360.0) return this + 360.0.asDegree
-        if (value >= 360.0 && value < 720.0) return this - 360.0.asDegree
+        if (value < 0.0 && value >= -360.0) return this + 360.0.deg
+        if (value >= 360.0 && value < 720.0) return this - 360.0.deg
         if (value >= 0.0 && value < 360.0) return this
 
         var d = value - 360.0 * floor(value / 360.0)
@@ -25,10 +25,10 @@ value class Degree(val value: Double): Comparable<Degree> {
         // from modulus for negative numbers.
         if (d < 0.0) d += 360.0
 
-        return d.asDegree
+        return d.deg
     }
 
 }
 
-inline val Int.asDegree: Degree get() = Degree(this.toDouble())
-inline val Double.asDegree: Degree get() = Degree(this)
+inline val Int.deg: Degree get() = Degree(this.toDouble())
+inline val Double.deg: Degree get() = Degree(this)
