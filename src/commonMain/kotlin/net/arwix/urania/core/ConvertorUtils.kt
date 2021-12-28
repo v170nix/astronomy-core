@@ -1,8 +1,8 @@
 package net.arwix.urania.core
 
-import net.arwix.urania.core.math.angle.rad
-import net.arwix.urania.core.math.angle.cos
-import net.arwix.urania.core.math.angle.sin
+import net.arwix.urania.core.math.DEG_TO_RAD
+import net.arwix.urania.core.math.RAD_TO_DEG
+import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.vector.RectangularVector
 import net.arwix.urania.core.math.vector.SphericalVector
 import net.arwix.urania.core.math.vector.Vector
@@ -41,3 +41,6 @@ inline fun <reified T : Vector> convert(vector: Vector): T {
 
 inline val Vector.rectangular: RectangularVector get() = convert(this)
 inline val Vector.spherical: SphericalVector get() = convert(this)
+
+inline fun Degree.toRad() = (this.value * DEG_TO_RAD).rad
+inline fun Radian.toDeg() = (this.value * RAD_TO_DEG).deg
