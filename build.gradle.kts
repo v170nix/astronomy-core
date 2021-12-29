@@ -64,6 +64,7 @@ kotlin {
         val jsMain by getting
         val jsTest by getting {
             dependencies {
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
                 implementation("org.jetbrains.kotlin:kotlin-test-js")
 //                implementation(npm("@js-joda/timezone", "2.3.0"))
             }
