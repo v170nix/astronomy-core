@@ -1,0 +1,57 @@
+package net.arwix.urania.core.obliquity
+
+import net.arwix.urania.core.calendar.JT
+import net.arwix.urania.core.ephemeris.EphemerisVector
+import net.arwix.urania.core.ephemeris.Plane
+import net.arwix.urania.core.math.angle.Radian
+import net.arwix.urania.core.math.vector.Matrix
+import net.arwix.urania.core.math.vector.Vector
+
+interface ObliquityElements {
+
+    val id: Obliquity
+    val jT: JT
+
+    val eps: Radian
+    val eclipticToEquatorialMatrix: Matrix
+    val equatorialToEclipticMatrix: Matrix
+
+    fun rotate(vector: Vector, currentPlane: Plane): Vector
+
+    fun rotate(ephemerisVector: EphemerisVector): EphemerisVector {
+        return ephemerisVector.copy(
+            value = rotate(ephemerisVector.value, ephemerisVector.metadata.plane),
+            metadata = ephemerisVector.metadata.copy(
+                plane = when (ephemerisVector.metadata.plane) {
+                    Plane.Ecliptic -> Plane.Equatorial
+                    Plane.Equatorial -> Plane.Ecliptic
+                    else -> throw IllegalStateException()
+                }
+            )
+        )
+    }
+}
+
+sealed class Obliquity {
+
+    /** Laskar et al.
+     *
+     * This expansion is from Laskar, cited above. Bretagnon and Simon say,
+     * in Planetary Programs and Tables, that it is accurate to 0.1" over a
+     * span of 6000 years. Laskar estimates the precision to be 0.01" after
+     * 1000 years and a few seconds of arc after 10000 years.
+     */
+    object Laskar1986 : Obliquity()
+
+    // Williams et al., DE403 Ephemeris
+    object Williams1994 : Obliquity()
+
+    // Simon et al., 1994
+    object Simon1994 : Obliquity()
+    object IAU1976 : Obliquity()
+
+    // Capitaine et al. 2003, Hilton et al. 2006
+    object IAU2006 : Obliquity()
+    object Vondrak2011 : Obliquity()
+
+}
