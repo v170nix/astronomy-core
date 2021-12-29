@@ -17,28 +17,24 @@ interface PrecessionElements {
     val fromJ2000Matrix: Matrix
     val toJ2000Matrix: Matrix
 
-    fun fromJ2000ToApparent(vector: Vector): Vector = fromJ2000Matrix * vector
-    fun fromApparentToJ2000(vector: Vector): Vector = toJ2000Matrix * vector
+    fun move(vector: Vector, currentEpoch: Epoch): Vector {
+        return when (currentEpoch) {
+            Epoch.Apparent -> toJ2000Matrix * vector
+            Epoch.J2000 -> fromJ2000Matrix * vector
+        }
+    }
 
-    @Throws(IllegalArgumentException::class)
-    fun fromJ2000ToApparent(ephemerisVector: EphemerisVector): EphemerisVector {
-        if (ephemerisVector.metadata.epoch != Epoch.J2000 || ephemerisVector.metadata.plane != this.id.plane)
-            throw IllegalArgumentException()
+    fun move(ephemerisVector: EphemerisVector): EphemerisVector {
+        if (ephemerisVector.metadata.plane != this.id.plane) throw IllegalStateException()
         return ephemerisVector.copy(
-            value = fromJ2000ToApparent(ephemerisVector.value),
-            metadata = ephemerisVector.metadata.copy(epoch = Epoch.Apparent)
+            value = move(ephemerisVector.value, ephemerisVector.metadata.epoch),
+            metadata = ephemerisVector.metadata.copy(epoch = when (ephemerisVector.metadata.epoch) {
+                Epoch.Apparent -> Epoch.J2000
+                Epoch.J2000 -> Epoch.Apparent
+            })
         )
     }
 
-    @Throws(IllegalArgumentException::class)
-    fun fromApparentToJ2000(ephemerisVector: EphemerisVector): EphemerisVector {
-        if (ephemerisVector.metadata.epoch != Epoch.Apparent || ephemerisVector.metadata.plane != this.id.plane)
-            throw IllegalArgumentException()
-        return ephemerisVector.copy(
-            value = fromJ2000ToApparent(ephemerisVector.value),
-            metadata = ephemerisVector.metadata.copy(epoch = Epoch.J2000)
-        )
-    }
 }
 
 @JsExport

@@ -65,7 +65,7 @@ private fun createEquatorialPrecessionMatrix(precession: Precession, jT: JT): Ma
     return when (precession) {
         Precession.IAU2000 -> createPrecessionIAU2000Matrix(jT, true)
         Precession.IAU2006 -> createIAU2006Matrix(jT)
-        Precession.IAU2006 -> createIAU2006Matrix(jT)
+        Precession.IAU2009 -> createIAU2006Matrix(jT)
         Precession.Vondrak2011 -> createVondrakMatrix(jT)
         else -> throw IndexOutOfBoundsException()
     }
