@@ -1,6 +1,7 @@
 package net.arwix.urania.core.math.angle
 
 import net.arwix.urania.core.calendar.JT
+import net.arwix.urania.core.math.ARCSEC_TO_RAD
 import kotlin.jvm.JvmInline
 import kotlin.math.PI
 import kotlin.math.floor

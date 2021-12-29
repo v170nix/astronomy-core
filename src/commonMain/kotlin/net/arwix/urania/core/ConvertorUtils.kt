@@ -1,5 +1,6 @@
 package net.arwix.urania.core
 
+import net.arwix.urania.core.math.ARCSEC_TO_RAD
 import net.arwix.urania.core.math.DEG_TO_RAD
 import net.arwix.urania.core.math.RAD_TO_DEG
 import net.arwix.urania.core.math.angle.*
@@ -44,3 +45,4 @@ inline val Vector.spherical: SphericalVector get() = convert(this)
 
 inline fun Degree.toRad() = (this.value * DEG_TO_RAD).rad
 inline fun Radian.toDeg() = (this.value * RAD_TO_DEG).deg
+inline fun Double.arcToRad(): Radian = Radian(this * ARCSEC_TO_RAD)
