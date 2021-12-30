@@ -88,7 +88,7 @@ publishing {
     }
 }
 
-if (System.getenv("JITPACK") == "true")
+//if (System.getenv("JITPACK") == "true")
     tasks["publishToMavenLocal"].doLast {
         val version = System.getenv("VERSION")
         val artifacts = publishing.publications.filterIsInstance<MavenPublication>().map { it.artifactId }
