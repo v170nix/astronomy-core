@@ -1,9 +1,10 @@
 plugins {
     kotlin("multiplatform") version "1.6.10"
+    id("maven-publish")
 }
 
 group = "net.arwix.urania"
-version = "0.0.1-SNAPSHOT"
+version = "0.0.2-alpha01"
 
 repositories {
     mavenCentral()
@@ -72,4 +73,9 @@ kotlin {
         val nativeMain by getting
         val nativeTest by getting
     }
+
+//    publishing {
+//        publications {
+//        }
+//    }
 }
