@@ -1,4 +1,4 @@
-package net.arwix.urania.core.precession
+package net.arwix.urania.core.transformation.precession
 
 import net.arwix.urania.core.Ecliptic
 import net.arwix.urania.core.Equatorial
@@ -17,22 +17,31 @@ interface PrecessionElements {
     val fromJ2000Matrix: Matrix
     val toJ2000Matrix: Matrix
 
-    fun move(vector: Vector, currentEpoch: Epoch): Vector {
-        return when (currentEpoch) {
-            Epoch.Apparent -> toJ2000Matrix * vector
-            Epoch.J2000 -> fromJ2000Matrix * vector
+    fun changeEpoch(vector: Vector, toEpoch: Epoch): Vector {
+        return when (toEpoch) {
+            Epoch.J2000 -> toJ2000Matrix * vector
+            Epoch.Apparent -> fromJ2000Matrix * vector
         }
     }
 
-    fun move(ephemerisVector: EphemerisVector): EphemerisVector {
+    fun changeEpoch(ephemerisVector: EphemerisVector): EphemerisVector {
         if (ephemerisVector.metadata.plane != this.id.plane) throw IllegalStateException()
+        val toEpoch = when (ephemerisVector.metadata.epoch) {
+            Epoch.Apparent -> Epoch.J2000
+            Epoch.J2000 -> Epoch.Apparent
+        }
         return ephemerisVector.copy(
-            value = move(ephemerisVector.value, ephemerisVector.metadata.epoch),
-            metadata = ephemerisVector.metadata.copy(epoch = when (ephemerisVector.metadata.epoch) {
-                Epoch.Apparent -> Epoch.J2000
-                Epoch.J2000 -> Epoch.Apparent
-            })
+            value = changeEpoch(ephemerisVector.value, toEpoch),
+            metadata = ephemerisVector.metadata.copy(epoch = toEpoch)
         )
+    }
+
+    fun Vector.changeEpoch(toEpoch: Epoch): Vector {
+        return changeEpoch(this, toEpoch)
+    }
+
+    fun EphemerisVector.changeEpoch(toEpoch: Epoch): EphemerisVector {
+        return changeEpoch(this)
     }
 
 }

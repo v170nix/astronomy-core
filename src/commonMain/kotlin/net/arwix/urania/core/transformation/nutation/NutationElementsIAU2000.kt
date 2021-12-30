@@ -1,4 +1,4 @@
-package net.arwix.urania.core.nutation
+package net.arwix.urania.core.transformation.nutation
 
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times

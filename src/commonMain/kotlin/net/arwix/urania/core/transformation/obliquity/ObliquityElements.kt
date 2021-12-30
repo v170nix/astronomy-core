@@ -1,4 +1,4 @@
-package net.arwix.urania.core.obliquity
+package net.arwix.urania.core.transformation.obliquity
 
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.ephemeris.EphemerisVector
@@ -16,19 +16,26 @@ interface ObliquityElements {
     val eclipticToEquatorialMatrix: Matrix
     val equatorialToEclipticMatrix: Matrix
 
-    fun rotate(vector: Vector, currentPlane: Plane): Vector
+    fun rotatePlane(vector: Vector, toPlane: Plane): Vector
 
-    fun rotate(ephemerisVector: EphemerisVector): EphemerisVector {
+    fun rotatePlane(ephemerisVector: EphemerisVector): EphemerisVector {
+        val toPlane = when (ephemerisVector.metadata.plane) {
+            Plane.Ecliptic -> Plane.Equatorial
+            Plane.Equatorial -> Plane.Ecliptic
+            else -> throw IllegalStateException()
+        }
         return ephemerisVector.copy(
-            value = rotate(ephemerisVector.value, ephemerisVector.metadata.plane),
-            metadata = ephemerisVector.metadata.copy(
-                plane = when (ephemerisVector.metadata.plane) {
-                    Plane.Ecliptic -> Plane.Equatorial
-                    Plane.Equatorial -> Plane.Ecliptic
-                    else -> throw IllegalStateException()
-                }
-            )
+            value = rotatePlane(ephemerisVector.value, toPlane),
+            metadata = ephemerisVector.metadata.copy(plane = toPlane)
         )
+    }
+
+    fun Vector.rotatePlane(toPlane: Plane): Vector {
+        return rotatePlane(this, toPlane)
+    }
+
+    fun EphemerisVector.rotatePlane(toPlane: Plane): EphemerisVector {
+        return rotatePlane(this)
     }
 }
 

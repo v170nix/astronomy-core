@@ -1,6 +1,8 @@
 package net.arwix.urania.core.ephemeris.fast
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.supervisorScope
 import net.arwix.urania.core.*
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
@@ -15,7 +17,7 @@ import kotlin.math.abs
 @Ecliptic
 @Apparent
 object FastMoonEphemeris : Ephemeris {
-    private val info = EphemerisMetadata(
+    private val info = Metadata(
         orbit = Orbit.Geocentric,
         plane = Plane.Ecliptic,
         epoch = Epoch.Apparent

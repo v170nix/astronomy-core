@@ -9,7 +9,9 @@ import net.arwix.urania.core.ephemeris.*
 import net.arwix.urania.core.kepler.KeplerElementsObject
 import net.arwix.urania.core.kepler.getSimonJ2000KeplerElements
 import net.arwix.urania.core.math.angle.*
-import net.arwix.urania.core.math.vector.*
+import net.arwix.urania.core.math.vector.RectangularVector
+import net.arwix.urania.core.math.vector.SphericalVector
+import net.arwix.urania.core.math.vector.Vector
 import net.arwix.urania.core.toRad
 
 @Geocentric
@@ -17,7 +19,7 @@ import net.arwix.urania.core.toRad
 @Apparent
 object FastSunEphemeris: Ephemeris {
 
-    private val info = EphemerisMetadata(
+    private val info = Metadata(
         orbit = Orbit.Geocentric,
         plane = Plane.Ecliptic,
         epoch = Epoch.Apparent

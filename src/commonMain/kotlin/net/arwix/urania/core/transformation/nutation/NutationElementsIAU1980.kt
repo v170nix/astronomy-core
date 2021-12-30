@@ -1,4 +1,4 @@
-package net.arwix.urania.core.nutation
+package net.arwix.urania.core.transformation.nutation
 
 import net.arwix.urania.core.arcToRad
 import net.arwix.urania.core.calendar.JT
@@ -7,8 +7,6 @@ import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.cos
 import net.arwix.urania.core.math.angle.sin
 import net.arwix.urania.core.math.mod3600
-import kotlin.math.cos
-import kotlin.math.sin
 
 internal fun getNutationAnglesIAU1980(t: JT): NutationElements.NutationAngles {
 

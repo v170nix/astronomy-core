@@ -1,6 +1,6 @@
 @file:Suppress("unused")
 
-package net.arwix.urania.core.precession
+package net.arwix.urania.core.transformation.precession
 
 import net.arwix.urania.core.Ecliptic
 import net.arwix.urania.core.Equatorial

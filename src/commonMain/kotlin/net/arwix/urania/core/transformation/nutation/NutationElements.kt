@@ -1,9 +1,10 @@
-package net.arwix.urania.core.nutation
+package net.arwix.urania.core.transformation.nutation
 
 import net.arwix.urania.core.Ecliptic
 import net.arwix.urania.core.Equatorial
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
+import net.arwix.urania.core.ephemeris.EphemerisVector
 import net.arwix.urania.core.ephemeris.Plane
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.vector.Matrix
@@ -11,9 +12,9 @@ import net.arwix.urania.core.math.vector.Matrix.Companion.AXIS_X
 import net.arwix.urania.core.math.vector.Matrix.Companion.AXIS_Z
 import net.arwix.urania.core.math.vector.Vector
 import net.arwix.urania.core.math.vector.times
-import net.arwix.urania.core.obliquity.Obliquity
-import net.arwix.urania.core.obliquity.getEps
 import net.arwix.urania.core.rectangular
+import net.arwix.urania.core.transformation.obliquity.Obliquity
+import net.arwix.urania.core.transformation.obliquity.getEps
 
 interface NutationElements {
 
@@ -30,6 +31,33 @@ interface NutationElements {
 
     fun apply(vector: Vector, currentPlane: Plane): Vector
     fun remove(vector: Vector, currentPlane: Plane): Vector
+
+    fun apply(ephemerisVector: EphemerisVector): EphemerisVector {
+        return ephemerisVector.copy(
+            value = apply(ephemerisVector.value, ephemerisVector.metadata.plane)
+        )
+    }
+    fun remove(ephemerisVector: EphemerisVector): EphemerisVector {
+        return ephemerisVector.copy(
+            value = remove(ephemerisVector.value, ephemerisVector.metadata.plane)
+        )
+    }
+
+    fun Vector.applyNutation(currentPlane: Plane): Vector {
+        return apply(this, currentPlane)
+    }
+
+    fun Vector.removeNutation(currentPlane: Plane): Vector {
+        return remove(this, currentPlane)
+    }
+
+    fun EphemerisVector.applyNutation(): EphemerisVector {
+        return apply(this)
+    }
+
+    fun EphemerisVector.removeNutation(): EphemerisVector {
+        return remove(this)
+    }
 }
 
 sealed class Nutation {

@@ -1,4 +1,4 @@
-package net.arwix.urania.core.obliquity
+package net.arwix.urania.core.transformation.obliquity
 
 import net.arwix.urania.core.arcToRad
 import net.arwix.urania.core.calendar.JT
@@ -27,10 +27,10 @@ fun Obliquity.createElements(jT: JT): ObliquityElements {
         override val eclipticToEquatorialMatrix: Matrix = eclipticMatrix
         override val equatorialToEclipticMatrix: Matrix = equatorialMatrix
 
-        override fun rotate(vector: Vector, currentPlane: Plane): Vector {
-            return when (currentPlane) {
-                Plane.Ecliptic -> eclipticMatrix * vector
-                Plane.Equatorial -> equatorialMatrix * vector
+        override fun rotatePlane(vector: Vector, toPlane: Plane): Vector {
+            return when (toPlane) {
+                Plane.Ecliptic -> equatorialMatrix * vector
+                Plane.Equatorial -> eclipticMatrix * vector
                 else -> throw IllegalStateException()
             }
         }
