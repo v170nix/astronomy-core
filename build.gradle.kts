@@ -62,9 +62,14 @@ kotlin {
         }
         val jvmMain by getting
         val jvmTest by getting
-        val jsMain by getting
+        val jsMain by getting {
+            dependencies {
+                implementation(kotlin("stdlib-js"))
+            }
+        }
         val jsTest by getting {
             dependencies {
+                implementation(kotlin("test-js"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
                 implementation("org.jetbrains.kotlin:kotlin-test-js")
 //                implementation(npm("@js-joda/timezone", "2.3.0"))
@@ -73,9 +78,12 @@ kotlin {
         val nativeMain by getting
         val nativeTest by getting
     }
+}
 
-//    publishing {
-//        publications {
-//        }
-//    }
+publishing {
+    repositories {
+        maven {
+            url = uri("file://$projectDir/localRepo")
+        }
+    }
 }
