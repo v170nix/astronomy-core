@@ -83,7 +83,8 @@ kotlin {
 publishing {
     repositories {
         maven {
-            url = uri("file://$projectDir/localRepo")
+
+            url = uri("file://${System.getenv("HOME")}/.m2/repository")
         }
     }
 }
