@@ -36,9 +36,9 @@ interface PrecessionElements {
         )
     }
 
-    fun Vector.changeEpoch(toEpoch: Epoch): Vector {
-        return changeEpoch(this, toEpoch)
-    }
+//    fun Vector.changeEpoch(toEpoch: Epoch): Vector {
+//        return changeEpoch(this, toEpoch)
+//    }
 
     fun EphemerisVector.changeEpoch(toEpoch: Epoch): EphemerisVector {
         return changeEpoch(this)

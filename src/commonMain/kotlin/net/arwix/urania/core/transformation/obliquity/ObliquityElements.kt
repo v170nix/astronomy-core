@@ -30,9 +30,9 @@ interface ObliquityElements {
         )
     }
 
-    fun Vector.rotatePlane(toPlane: Plane): Vector {
-        return rotatePlane(this, toPlane)
-    }
+//    fun Vector.rotatePlane(toPlane: Plane): Vector {
+//        return rotatePlane(this, toPlane)
+//    }
 
     fun EphemerisVector.rotatePlane(toPlane: Plane): EphemerisVector {
         return rotatePlane(this)
