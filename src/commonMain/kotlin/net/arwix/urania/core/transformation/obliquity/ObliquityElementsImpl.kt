@@ -23,7 +23,7 @@ fun Obliquity.createElements(jT: JT): ObliquityElements {
     return object : ObliquityElements {
         override val id: Obliquity = this@createElements
         override val jT: JT = jT
-        override val eps: Radian = eps
+        override val meanEps: Radian = eps
         override val eclipticToEquatorialMatrix: Matrix = eclipticMatrix
         override val equatorialToEclipticMatrix: Matrix = equatorialMatrix
 

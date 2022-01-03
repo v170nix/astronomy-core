@@ -7,12 +7,13 @@ import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.vector.Matrix
 import net.arwix.urania.core.math.vector.Vector
 
+@Suppress("unused")
 interface ObliquityElements {
 
     val id: Obliquity
     val jT: JT
 
-    val eps: Radian
+    val meanEps: Radian
     val eclipticToEquatorialMatrix: Matrix
     val equatorialToEclipticMatrix: Matrix
 
