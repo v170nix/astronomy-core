@@ -13,9 +13,9 @@ import net.arwix.urania.core.transformation.precession.createElements
 @ExperimentalUrania
 class TransformationElements(precession: Precession, jt: JT) {
 
-    private val precessionElements = precession.createElements(jt)
-    private val obliquityElements: ObliquityElements = precession.findNearestObliquityModel().createElements(jt)
-    private val nutationElements: NutationElements =
+    val precessionElements = precession.createElements(jt)
+    val obliquityElements: ObliquityElements = precession.findNearestObliquityModel().createElements(jt)
+    val nutationElements: NutationElements =
         precession.findNearestNutationModel().createElements(jt, obliquityElements.id)
 
     val matrix = if (precession.plane == Plane.Ecliptic) {

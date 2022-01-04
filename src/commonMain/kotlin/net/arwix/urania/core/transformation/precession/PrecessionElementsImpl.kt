@@ -23,7 +23,7 @@ fun Precession.createElements(jT: JT): PrecessionElements {
     return when (plane) {
         Plane.Ecliptic -> {
             val matrix = createEclipticPrecessionMatrix(this@createElements, jT)
-            val transposeMatrix = matrix.transpose()
+            val transposeMatrix = createEclipticPrecessionMatrix(this@createElements, jT)
             object : PrecessionElements {
                 override val id: Precession = this@createElements
                 override val jT: JT = jT
@@ -33,9 +33,7 @@ fun Precession.createElements(jT: JT): PrecessionElements {
         }
         Plane.Equatorial -> {
             val matrix = createEquatorialPrecessionMatrix(this@createElements, jT)
-            val transposeMatrix = if (this@createElements == Precession.IAU2000) {
-                createPrecessionIAU2000Matrix(jT, false)
-            } else matrix.transpose()
+            val transposeMatrix = createEquatorialTransposePrecessionMatrix(this@createElements, jT)
 
             object : PrecessionElements {
                 override val id: Precession = this@createElements
@@ -51,11 +49,23 @@ fun Precession.createElements(jT: JT): PrecessionElements {
 @Ecliptic
 private fun createEclipticPrecessionMatrix(precession: Precession, jT: JT): Matrix {
     return when (precession) {
-        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT)
-        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT)
-        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT)
-        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT)
-        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT)
+        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT, true)
+        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT, true)
+        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT, true)
+        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT, true)
+        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT, true)
+        else -> throw IndexOutOfBoundsException()
+    }
+}
+
+@Ecliptic
+private fun createEclipticTransposePrecessionMatrix(precession: Precession, jT: JT): Matrix {
+    return when (precession) {
+        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT, false)
+        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT, false)
+        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT, false)
+        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT, false)
+        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT, false)
         else -> throw IndexOutOfBoundsException()
     }
 }
@@ -64,9 +74,20 @@ private fun createEclipticPrecessionMatrix(precession: Precession, jT: JT): Matr
 private fun createEquatorialPrecessionMatrix(precession: Precession, jT: JT): Matrix {
     return when (precession) {
         Precession.IAU2000 -> createPrecessionIAU2000Matrix(jT, true)
-        Precession.IAU2006 -> createIAU2006Matrix(jT)
-        Precession.IAU2009 -> createIAU2006Matrix(jT)
-        Precession.Vondrak2011 -> createVondrakMatrix(jT)
+        Precession.IAU2006 -> createIAU2006Matrix(jT, true)
+        Precession.IAU2009 -> createIAU2006Matrix(jT, true)
+        Precession.Vondrak2011 -> createVondrakMatrix(jT, true)
+        else -> throw IndexOutOfBoundsException()
+    }
+}
+
+@Equatorial
+private fun createEquatorialTransposePrecessionMatrix(precession: Precession, jT: JT): Matrix {
+    return when (precession) {
+        Precession.IAU2000 -> createPrecessionIAU2000Matrix(jT, false)
+        Precession.IAU2006 -> createIAU2006Matrix(jT, false)
+        Precession.IAU2009 -> createIAU2006Matrix(jT, false)
+        Precession.Vondrak2011 -> createVondrakMatrix(jT, false)
         else -> throw IndexOutOfBoundsException()
     }
 }
@@ -75,22 +96,24 @@ private fun createEquatorialPrecessionMatrix(precession: Precession, jT: JT): Ma
 @Equatorial
 private fun createPrecessionIAU2000Matrix(jT: JT, isFromJ2000ToApparent: Boolean): Matrix {
     val t0: JT = if (isFromJ2000ToApparent) jT else 0.0.jT
+    val innerJT = if (!isFromJ2000ToApparent) -jT else jT
     val eps0 = 84381.448
-    val psiA = (((-0.001147 * jT - 1.07259) * jT + 5038.7784) * jT - 0.29965 * t0).arcToRad()
-    val omegaA = (((-0.007726 * jT + 0.05127) * jT - 0.0) * jT + eps0 - 0.02524 * t0).arcToRad()
-    val chiA = (((-0.001125 * jT - 2.38064) * jT + 10.5526) * jT).arcToRad()
+    val psiA = (((-0.001147 * innerJT - 1.07259) * innerJT + 5038.7784) * innerJT - 0.29965 * t0).arcToRad()
+    val omegaA = (((-0.007726 * innerJT + 0.05127) * innerJT - 0.0) * innerJT + eps0 - 0.02524 * t0).arcToRad()
+    val chiA = (((-0.001125 * innerJT - 2.38064) * innerJT + 10.5526) * innerJT).arcToRad()
     return Matrix(AXIS_Z, chiA) * Matrix(AXIS_X, -omegaA) * Matrix(AXIS_Z, -psiA) * Matrix(AXIS_X, eps0.arcToRad())
 }
 
 @Equatorial
-private fun createIAU2006Matrix(jT: JT): Matrix {
+private fun createIAU2006Matrix(jT: JT, isFromJ2000ToApparent: Boolean): Matrix {
     val eps0 = 84381.406
+    val innerJT = if (!isFromJ2000ToApparent) -jT else jT
     val psiA =
-        (((((-0.0000000951 * jT + 0.000132851) * jT - 0.00114045) * jT - 1.0790069) * jT + 5038.481507) * jT).arcToRad()
+        (((((-0.0000000951 * innerJT + 0.000132851) * innerJT - 0.00114045) * innerJT - 1.0790069) * innerJT + 5038.481507) * innerJT).arcToRad()
     val omegaA =
-        (((((+0.0000003337 * jT - 0.000000467) * jT - 0.00772503) * jT + 0.0512623) * jT - 0.025754) * jT + eps0).arcToRad()
+        (((((+0.0000003337 * innerJT - 0.000000467) * innerJT - 0.00772503) * innerJT + 0.0512623) * innerJT - 0.025754) * innerJT + eps0).arcToRad()
     val chiA =
-        (((((-0.0000000560 * jT + 0.000170663) * jT - 0.00121197) * jT - 2.3814292) * jT + 10.556403) * jT).arcToRad()
+        (((((-0.0000000560 * innerJT + 0.000170663) * innerJT - 0.00121197) * innerJT - 2.3814292) * innerJT + 10.556403) * innerJT).arcToRad()
     return Matrix(AXIS_Z, chiA) * Matrix(AXIS_X, -omegaA) * Matrix(AXIS_Z, -psiA) * Matrix(AXIS_X, eps0.arcToRad())
 }
 
@@ -105,8 +128,9 @@ private fun createEclipticMatrix(list: Array<DoubleArray>, jT: JT, isFromJ2000To
 }
 
 @Equatorial
-private fun createVondrakMatrix(T: JT): Matrix {
-    var w = PI2.value * T
+private fun createVondrakMatrix(T: JT, isFromJ2000ToApparent: Boolean): Matrix {
+    val innerJT = if (!isFromJ2000ToApparent) -T else T
+    var w = PI2.value * innerJT
     val eps0 = 84381.406.arcToRad()
     val (psiA, omegaA, chiA) = (0..13).fold(RectangularVector(0.0, 0.0, 0.0)) { acc, i ->
         var a = w / xyper[i][0]
@@ -126,7 +150,7 @@ private fun createVondrakMatrix(T: JT): Matrix {
             it.x += xypol[0][j] * w
             it.y += xypol[1][j] * w
             it.z += xypol[2][j] * w
-            w *= T
+            w *= innerJT
         }
         return@let it
     } * ARCSEC_TO_RAD
