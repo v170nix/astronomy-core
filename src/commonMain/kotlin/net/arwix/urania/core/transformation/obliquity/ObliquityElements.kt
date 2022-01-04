@@ -6,6 +6,7 @@ import net.arwix.urania.core.ephemeris.Plane
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.vector.Matrix
 import net.arwix.urania.core.math.vector.Vector
+import net.arwix.urania.core.transformation.nutation.NutationElements
 
 @Suppress("unused")
 interface ObliquityElements {
@@ -13,7 +14,7 @@ interface ObliquityElements {
     val id: Obliquity
     val jT: JT
 
-    val meanEps: Radian
+    val meanObliquity: Radian
     val eclipticToEquatorialMatrix: Matrix
     val equatorialToEclipticMatrix: Matrix
 
@@ -29,6 +30,10 @@ interface ObliquityElements {
             value = rotatePlane(ephemerisVector.value, toPlane),
             metadata = ephemerisVector.metadata.copy(plane = toPlane)
         )
+    }
+
+    fun getTrueObliquity(nutationAngles: NutationElements.NutationAngles): Radian {
+        return meanObliquity + nutationAngles.deltaObliquity
     }
 
 //    fun Vector.rotatePlane(toPlane: Plane): Vector {
