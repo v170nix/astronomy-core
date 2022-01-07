@@ -1,6 +1,7 @@
+@file:Suppress("unused")
+
 package net.arwix.urania.core.calendar
 
-import net.arwix.urania.core.math.angle.Degree
 import kotlin.jvm.JvmInline
 
 @JvmInline
@@ -15,6 +16,10 @@ value class JT(val value: Double): Comparable<JT> {
     inline operator fun times(other: JT): Double = value * other.value
 
     override fun compareTo(other: JT) = value.compareTo(other.value)
+
+    companion object {
+        val J2000 = JT(0.0)
+    }
 }
 
 inline operator fun Double.times(jT: JT): Double = jT * this
