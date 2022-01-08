@@ -6,5 +6,5 @@ import kotlin.js.JsExport
 sealed class Plane {
     object Ecliptic: Plane()
     object Equatorial: Plane()
-    object Azimuthal: Plane()
+    object Topocentric: Plane()
 }

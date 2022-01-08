@@ -42,7 +42,7 @@ fun Precession.createElements(jT: JT): PrecessionElements {
                 override val toJ2000Matrix: Matrix = transposeMatrix
             }
         }
-        Plane.Azimuthal -> throw IllegalStateException()
+        Plane.Topocentric -> throw IllegalStateException()
     }
 }
 
