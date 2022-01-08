@@ -21,6 +21,9 @@ const val ARCSEC_TO_RAD = PI / (180.0 * 3600.0)
 
 const val SECONDS_PER_DAY = 86400.0
 
+/** Length of a sidereal day in days according to IERS Conventions.  */
+const val SIDEREAL_DAY_LENGTH = 1.0027378119113546
+
 /** Radians to arc seconds.  */
 const val RAD_TO_ARCSEC = 1.0 / ARCSEC_TO_RAD
 /** Arc seconds to degrees.  */
