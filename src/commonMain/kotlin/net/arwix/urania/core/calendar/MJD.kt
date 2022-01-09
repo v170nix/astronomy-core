@@ -2,11 +2,8 @@
 
 package net.arwix.urania.core.calendar
 
-import kotlinx.datetime.Instant
-import net.arwix.urania.core.math.SECONDS_PER_DAY
 import kotlin.jvm.JvmInline
 import kotlin.math.abs
-import kotlin.math.roundToLong
 
 @JvmInline
 value class MJD(val value: Double) : Comparable<MJD> {
@@ -66,13 +63,3 @@ inline val Double.mJD: MJD get() = MJD(this)
 
 
 inline operator fun Double.times(mJD: MJD): Double = mJD * this
-
-inline fun Instant.toMJD() = MJD(epochSeconds.toDouble() / SECONDS_PER_DAY + MJD.J1970.value - 0.5)
-
-inline fun MJD.toInstant(): Instant {
-    val seconds = (this.value + 0.5 - MJD.J1970.value) * SECONDS_PER_DAY
-    return Instant.fromEpochSeconds(seconds.roundToLong(), 0)
-}
-
-inline fun MJD.toJT(): JT = JT((this - MJD.J2000) / 36525.0)
-inline fun Instant.toJT(): JT = toMJD().toJT()
