@@ -9,7 +9,6 @@ import net.arwix.urania.core.ephemeris.*
 import net.arwix.urania.core.kepler.KeplerElementsObject
 import net.arwix.urania.core.kepler.getSimonJ2000KeplerElements
 import net.arwix.urania.core.math.angle.*
-import net.arwix.urania.core.math.vector.RectangularVector
 import net.arwix.urania.core.math.vector.SphericalVector
 import net.arwix.urania.core.math.vector.Vector
 import net.arwix.urania.core.toRad
@@ -37,8 +36,6 @@ object FastSunEphemeris: Ephemeris {
                 * args.fold(0.0) { acc, (x, y, z) -> acc + x * sin(y.deg.toRad() + (jT * z).deg.toRad()) }
                 ).deg.normalize().toRad()
 
-        RectangularVector.Zero
-
         val solarAnomaly = (357.5291092 + 35999.0502909 * jT - .0001536 * jT * jT + jT * jT * jT / 24490000.0).deg
             .normalize().toRad()
 
@@ -59,41 +56,6 @@ object FastSunEphemeris: Ephemeris {
         )
     }
 }
-
-//val fastSunEphemeris: (jT: JT) -> Vector
-//    get() = { jT ->
-//
-//        val aberration =
-//            (0.0000974 * cos((177.63 + 35999.01848 * jT).deg.toRad()) - 0.005575).deg.normalize().toRad()
-//
-//        val longitude = (282.7771834
-//                + 36000.76952744 * jT.value
-//                + 0.000005729577951308232
-//                * args.fold(0.0) { acc, (x, y, z) -> acc + x * sin(y.deg.toRad() + (jT * z).deg.toRad()) }
-//                ).deg.normalize().toRad()
-//
-//        RectangularVector.Zero
-//
-//        val solarAnomaly = (357.5291092 + 35999.0502909 * jT - .0001536 * jT * jT + jT * jT * jT / 24490000.0).deg
-//            .normalize().toRad()
-//
-//        var c = (1.9146 - .004817 * jT - .000014 * jT * jT) * sin(solarAnomaly)
-//        c += (.019993 - .000101 * jT) * sin(solarAnomaly * 2.0)
-//        c += .00029 * sin(solarAnomaly * 3.0) // Correction to the mean ecliptic longitude
-//        val nutation: Radian = getNutation(jT)
-//
-//
-//        val ecc = getSimonJ2000KeplerElements(KeplerElementsObject.Earth).getEccentricity(jT)
-//        val v = solarAnomaly + c.deg.toRad()
-//        val distance = 1.000001018 * (1.0 - ecc * ecc) / (1.0 + ecc * cos(v)) // In UA
-//
-//        SphericalVector(
-//            phi = longitude + nutation + aberration,
-//            theta = 0.rad,
-//            r = distance
-//        )
-//
-//    }
 
 private fun getNutation(jT: JT): Radian {
     val a = (124.90 - 1934.134 * jT + 0.002063 * jT * jT).deg.normalize().toRad()
