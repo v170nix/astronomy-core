@@ -1,9 +1,13 @@
+@file:Suppress("unused")
+
 package net.arwix.urania.core.calendar
 
 import net.arwix.urania.core.math.ARCSEC_TO_RAD
 import net.arwix.urania.core.math.SECONDS_PER_DAY
 import net.arwix.urania.core.math.angle.*
+import net.arwix.urania.core.observer.Observer
 import net.arwix.urania.core.toRad
+import net.arwix.urania.core.transformation.nutation.NutationElements
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.floor
@@ -20,7 +24,7 @@ enum class SiderealTimeMethod {
  * Greenwich Mean Sidereal Time
  * @return time in radian
  */
-inline fun MJD.getGMST(method: SiderealTimeMethod): Radian {
+inline fun MJD.getGreenwichMeanSiderealTime(method: SiderealTimeMethod): Radian {
     return when (method) {
         SiderealTimeMethod.Laskar1986 -> getGMSTLaskar1986()
         SiderealTimeMethod.Williams1994 -> getGMSTWilliams1994()
@@ -63,6 +67,24 @@ inline fun MJD.getGMSTIAU20xx(isIAU2000: Boolean): Radian {
     return gmst.rad.normalize()
 }
 
+fun MJD.getGreenwichApparentSiderealTime(method: SiderealTimeMethod): Radian {
+    return getGreenwichMeanSiderealTime(method) + getEquationOfEquinoxes(toJT())
+}
+
+fun MJD.getLocalApparentSiderealTime(method: SiderealTimeMethod, position: Observer.Position): Radian {
+    return getGreenwichMeanSiderealTime(method) + position.longitude
+}
+
+/**
+ * Returns equation of equinoxes
+ */
+fun getEquationOfEquinoxes(
+    meanObliquity: Radian,
+    nutationAngles: NutationElements.NutationAngles
+): Radian {
+    return nutationAngles.deltaLongitude * cos(meanObliquity)
+}
+
 fun getEquationOfEquinoxes(jT: JT): Radian {
     // abs (year) < 3000
     // See Henning Umland's page at http://www2.arnes.si/~gljsentvid10/longterm.htm
@@ -94,7 +116,7 @@ fun getEquationOfEquinoxes(jT: JT): Radian {
     de += (54 - 0.1 * jT) * cos(M)
     dp += (712 + 0.1 * jT) * sin(Mm)
     de += -7 * cos(Mm)
-    dp += (-517 + 1.2 * jT)	* sin(-2 * D + M + 2 * F + 2 * omega)
+    dp += (-517 + 1.2 * jT) * sin(-2 * D + M + 2 * F + 2 * omega)
     de += (224 - 0.6 * jT) * cos(-2 * D + M + 2 * F + 2 * omega)
     dp += (-386 - 0.4 * jT) * sin(2 * F + omega)
     de += 200 * cos(2 * F + omega)
