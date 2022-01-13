@@ -2,7 +2,6 @@
 
 package net.arwix.urania.core.observer
 
-import kotlinx.datetime.TimeZone
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.rad
 import net.arwix.urania.core.math.angle.times
@@ -14,9 +13,7 @@ import kotlin.math.exp
 import kotlin.math.sqrt
 
 data class Observer(
-    val name: String,
     val position: Position,
-    val timeZone: TimeZone,
     val weather: Weather = Weather(),
     val ellipsoid: Ellipsoid = EllipsoidObject.Earth
 ) {
