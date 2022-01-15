@@ -1,11 +1,9 @@
 package net.arwix.urania.core.math.angle
 
-import net.arwix.urania.core.calendar.JT
-import net.arwix.urania.core.math.ARCSEC_TO_RAD
 import kotlin.jvm.JvmInline
-import kotlin.math.PI
 import kotlin.math.floor
 
+@Suppress("MemberVisibilityCanBePrivate")
 @JvmInline
 value class Radian(val value: Double): Comparable<Radian> {
 
@@ -35,8 +33,9 @@ value class Radian(val value: Double): Comparable<Radian> {
     inline fun sin(): Double = kotlin.math.sin(value)
 
     companion object {
-        val PI2 = Radian(PI * 2.0)
-        val PI4 = Radian(PI * 4.0)
+        val PI = Radian(kotlin.math.PI)
+        val PI2 = Radian(kotlin.math.PI * 2.0)
+        val PI4 = Radian(kotlin.math.PI * 4.0)
         val Zero = Radian(0.0)
     }
 

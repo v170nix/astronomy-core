@@ -21,9 +21,6 @@ const val ARCSEC_TO_RAD = PI / (180.0 * 3600.0)
 
 const val SECONDS_PER_DAY = 86400.0
 
-/** Length of a sidereal day in days according to IERS Conventions.  */
-const val SIDEREAL_DAY_LENGTH = 1.0027378119113546
-
 /** Radians to arc seconds.  */
 const val RAD_TO_ARCSEC = 1.0 / ARCSEC_TO_RAD
 /** Arc seconds to degrees.  */
@@ -43,3 +40,15 @@ const val PI_OVER_TWO = PI / 2.0
 const val PI_OVER_FOUR = PI / 4.0
 /** Pi divided by six.  */
 const val PI_OVER_SIX = PI / 6.0
+
+/** Speed of light in m/s, exact as it is defined. */
+const val SPEED_OF_LIGHT = 299792458.0
+/** 1 au in km */
+const val AU = 149597870.7
+
+/** Light time in days for 1 AU.  */
+const val LIGHT_TIME_DAYS_PER_AU: Double = AU * 1000.0 / (SPEED_OF_LIGHT * SECONDS_PER_DAY)
+
+
+/** Length of a sidereal day in days according to IERS Conventions.  */
+const val SIDEREAL_DAY_LENGTH = 1.0027378119113546
