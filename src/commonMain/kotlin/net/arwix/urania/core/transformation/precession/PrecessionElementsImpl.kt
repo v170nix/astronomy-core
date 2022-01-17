@@ -23,7 +23,7 @@ fun Precession.createElements(jT: JT): PrecessionElements {
     return when (plane) {
         Plane.Ecliptic -> {
             val matrix = createEclipticPrecessionMatrix(this@createElements, jT)
-            val transposeMatrix = createEclipticPrecessionMatrix(this@createElements, jT)
+            val transposeMatrix = matrix.transpose()
             object : PrecessionElements {
                 override val id: Precession = this@createElements
                 override val jT: JT = jT
@@ -49,23 +49,11 @@ fun Precession.createElements(jT: JT): PrecessionElements {
 @Ecliptic
 private fun createEclipticPrecessionMatrix(precession: Precession, jT: JT): Matrix {
     return when (precession) {
-        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT, true)
-        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT, true)
-        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT, true)
-        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT, true)
-        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT, true)
-        else -> throw IndexOutOfBoundsException()
-    }
-}
-
-@Ecliptic
-private fun createEclipticTransposePrecessionMatrix(precession: Precession, jT: JT): Matrix {
-    return when (precession) {
-        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT, false)
-        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT, false)
-        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT, false)
-        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT, false)
-        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT, false)
+        Precession.IAU1976 -> createEclipticMatrix(IAU_1976_Matrices, jT)
+        Precession.Laskar1986 -> createEclipticMatrix(LASKAR_1986_Matrices, jT)
+        Precession.Williams1994 -> createEclipticMatrix(WILLIAMS_1994_Matrices, jT)
+        Precession.Simon1994 -> createEclipticMatrix(SIMON_1994_Matrices, jT)
+        Precession.DE4xxx -> createEclipticMatrix(JPL_DE4xx_Matrices, jT)
         else -> throw IndexOutOfBoundsException()
     }
 }
@@ -118,11 +106,11 @@ private fun createIAU2006Matrix(jT: JT, isFromJ2000ToApparent: Boolean): Matrix 
 }
 
 @Ecliptic
-private fun createEclipticMatrix(list: Array<DoubleArray>, jT: JT, isFromJ2000ToApparent: Boolean = true): Matrix {
+private fun createEclipticMatrix(list: Array<DoubleArray>, jT: JT): Matrix {
     val jT10 = jT / 10.0 /* thousands of years */
     val pA = (ARCSEC_TO_RAD * jT10 * list[0].fold(0.0) { acc, d -> acc * jT10 + d }).rad
     val w = (list[1].fold(0.0) { acc, d -> acc * jT10 + d }).rad
-    val z = (list[2].fold(0.0) { acc, d -> acc * jT10 + d }.let { if (!isFromJ2000ToApparent) -it else it }).rad
+    val z = (list[2].fold(0.0) { acc, d -> acc * jT10 + d }).rad
 
     return Matrix(AXIS_Z, -(w + pA)) * Matrix(AXIS_X, z) * Matrix(AXIS_Z, w)
 }
