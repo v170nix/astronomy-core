@@ -4,10 +4,11 @@ plugins {
 }
 
 group = "net.arwix.urania"
-version = "0.0.2-alpha01"
+version = "1.0-alpha04"
 
 repositories {
     mavenCentral()
+    mavenLocal()
 }
 //dependencies {
 //    implementation("junit:junit:4.13.1")
@@ -59,6 +60,7 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
                 implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+                implementation ("net.arwix.urania:astronomy-vsop87a:0.0.2")
             }
         }
         val jvmMain by getting
