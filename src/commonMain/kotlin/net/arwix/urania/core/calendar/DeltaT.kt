@@ -28,7 +28,7 @@ fun getDeltaT(mjd: MJD): Double {
         else -> null
     }
     if (deltaTInSecs != null) return deltaTInSecs
-    return getDeltaT(mjd.toInstant())
+    return getDeltaT(mjd.toInstant(false))
 }
 
 // TT-UT1
