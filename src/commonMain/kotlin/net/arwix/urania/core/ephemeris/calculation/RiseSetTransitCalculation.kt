@@ -21,7 +21,7 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
 
-class RiseSetTransitCalculation {
+object RiseSetTransitCalculation {
 
     sealed class Request(open val isStar: Boolean) {
         sealed class RiseSet(open val elevation: Radian, isStar: Boolean = false) : Request(isStar) {
@@ -296,9 +296,6 @@ class RiseSetTransitCalculation {
         }
     }
 
-    private companion object {
-        private const val celestialHoursToEarthTime: Double = RAD_TO_DAY / SIDEREAL_DAY_LENGTH
-    }
-
+    private const val celestialHoursToEarthTime: Double = RAD_TO_DAY / SIDEREAL_DAY_LENGTH
 
 }
