@@ -9,6 +9,7 @@ import net.arwix.urania.core.annotation.Geocentric
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.ephemeris.*
+import net.arwix.urania.core.math.AU
 import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.polynomialSum
 import net.arwix.urania.core.math.vector.SphericalVector

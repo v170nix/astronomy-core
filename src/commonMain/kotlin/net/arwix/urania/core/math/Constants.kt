@@ -54,3 +54,6 @@ const val SIDEREAL_DAY_LENGTH = 1.0027378119113546
 
 /** Heliocentric gravitational constant, in m^3/s^2 (Pitjeva 2015). */
 const val SUN_GRAVITATIONAL_CONSTANT = 1.32712440042e20
+
+const val SUN_RADIUS_IN_ARCS = 959.644 // in arc-seconds at 1ae
+const val SUN_RADIUS_IN_METERS = 695508000.0

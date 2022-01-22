@@ -1,7 +1,7 @@
 package net.arwix.urania.core.transformation
 
 import net.arwix.urania.core.annotation.ExperimentalUrania
-import net.arwix.urania.core.ephemeris.AU
+import net.arwix.urania.core.math.AU
 import net.arwix.urania.core.math.SPEED_OF_LIGHT
 import net.arwix.urania.core.math.SUN_GRAVITATIONAL_CONSTANT
 import net.arwix.urania.core.math.vector.RectangularVector
