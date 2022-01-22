@@ -3,7 +3,9 @@ package net.arwix.urania.core.ephemeris.fast
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.supervisorScope
-import net.arwix.urania.core.*
+import net.arwix.urania.core.annotation.Apparent
+import net.arwix.urania.core.annotation.Ecliptic
+import net.arwix.urania.core.annotation.Geocentric
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.ephemeris.*
@@ -11,6 +13,8 @@ import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.polynomialSum
 import net.arwix.urania.core.math.vector.SphericalVector
 import net.arwix.urania.core.math.vector.Vector
+import net.arwix.urania.core.toDeg
+import net.arwix.urania.core.toRad
 import kotlin.math.abs
 
 @Geocentric

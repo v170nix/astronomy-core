@@ -2,8 +2,8 @@
 
 package net.arwix.urania.core.transformation.precession
 
-import net.arwix.urania.core.Ecliptic
-import net.arwix.urania.core.Equatorial
+import net.arwix.urania.core.annotation.Ecliptic
+import net.arwix.urania.core.annotation.Equatorial
 import net.arwix.urania.core.arcToRad
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.jT

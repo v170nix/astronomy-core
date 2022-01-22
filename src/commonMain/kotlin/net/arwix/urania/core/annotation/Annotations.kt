@@ -1,4 +1,4 @@
-package net.arwix.urania.core
+package net.arwix.urania.core.annotation
 
 @Retention(AnnotationRetention.SOURCE)
 annotation class Geocentric

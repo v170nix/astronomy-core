@@ -1,8 +1,8 @@
 package net.arwix.urania.core.ephemeris.fast
 
-import net.arwix.urania.core.Apparent
-import net.arwix.urania.core.Ecliptic
-import net.arwix.urania.core.Geocentric
+import net.arwix.urania.core.annotation.Apparent
+import net.arwix.urania.core.annotation.Ecliptic
+import net.arwix.urania.core.annotation.Geocentric
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.ephemeris.*

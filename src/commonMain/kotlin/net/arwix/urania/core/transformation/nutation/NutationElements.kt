@@ -1,7 +1,7 @@
 package net.arwix.urania.core.transformation.nutation
 
-import net.arwix.urania.core.Ecliptic
-import net.arwix.urania.core.Equatorial
+import net.arwix.urania.core.annotation.Ecliptic
+import net.arwix.urania.core.annotation.Equatorial
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.ephemeris.EphemerisVector

@@ -3,24 +3,34 @@
 package net.arwix.urania.core.ephemeris.fast
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atStartOfDayIn
 import net.arwix.urania.core.assertContentEquals
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.jT
+import net.arwix.urania.core.calendar.toJT
 import net.arwix.urania.core.ephemeris.*
-import net.arwix.urania.core.math.angle.deg
-import net.arwix.urania.core.math.vector.SphericalVector
-import net.arwix.urania.core.math.vector.times
+import net.arwix.urania.core.math.JULIAN_DAYS_PER_CENTURY
+import net.arwix.urania.core.math.LIGHT_TIME_DAYS_PER_AU
+import net.arwix.urania.core.math.angle.toDec
+import net.arwix.urania.core.math.angle.toRA
+import net.arwix.urania.core.math.vector.RectangularVector
+import net.arwix.urania.core.math.vector.Vector
 import net.arwix.urania.core.spherical
-import net.arwix.urania.core.toDeg
-import net.arwix.urania.core.toRad
-import net.arwix.urania.core.transformation.TransformationElements
 import net.arwix.urania.core.transformation.nutation.Nutation
 import net.arwix.urania.core.transformation.nutation.createElements
 import net.arwix.urania.core.transformation.obliquity.Obliquity
 import net.arwix.urania.core.transformation.obliquity.createElements
 import net.arwix.urania.core.transformation.precession.Precession
 import net.arwix.urania.core.transformation.precession.createElements
+import net.arwix.urania.vsop87a.Vsop87AEarthRectangularData
+import net.arwix.urania.vsop87a.Vsop87AMarsRectangularData
+import net.arwix.urania.vsop87a.VsopRectangularData
+import net.arwix.urania.vsop87a.getEphemerisVsop87A
 import kotlin.test.Test
 import kotlin.test.assertEquals
 
@@ -56,70 +66,277 @@ class FastSunEphemerisTest {
 
     @Test
     fun invoke1() = runTest {
-        val jt = JT(0.22)
-        val result = FastSunEphemeris(jt).spherical
-        val obliquity = Obliquity.Simon1994.createElements(jt)
-        val equSun = obliquity.rotatePlane(result, Plane.Equatorial).spherical
-        val raSun = equSun.phi.toDeg() / 15.0
-        val raDeg = raSun.value.toInt()
-        val raMin = ((raSun.value - raDeg.toDouble()) * 60.0).toInt()
-        val raSec = ((raSun.value - raDeg.toDouble() - raMin / 60.0)) * 3600.0
-        val decSun = equSun.theta.toDeg()
-        val rSun = equSun.r
-        println( "ra $raDeg $raMin $raSec" )
-        println( "dec $decSun" )
-        println( "rSun $rSun")
-        val horizonSun = SphericalVector(
-            phi = ((18.0 + 45.0 / 60.0 + 48.42 / 3600.0) * 15.0).deg.toRad(),
-            theta = (-23.0 - 01.0 / 60.0 - 12.4 / 3600.0).deg.toRad(),
-            r = 0.98335557932966
+
+        val sunEphemeris = object : Ephemeris {
+            override val metadata: Metadata
+                get() = Metadata(
+                    orbit = Orbit.Heliocentric,
+                    plane = Plane.Ecliptic,
+                    epoch = Epoch.J2000
+                )
+
+            override suspend fun invoke(jT: JT): Vector {
+                return -getEphemerisVsop87A(Vsop87AEarthRectangularData, jT).spherical
+            }
+        }
+        val time = LocalDate(2022, 1, 11).atStartOfDayIn(TimeZone.UTC)
+        val result = sunEphemeris(time.toJT()).spherical
+        val obliquity = Obliquity.IAU2006.createElements(JT.J2000)
+        val equResult = obliquity.rotatePlane(result, Plane.Equatorial).spherical
+        val ra = equResult.phi.toRA()
+        val dec = equResult.theta.toDec()
+        println("ICRF ra $ra")
+        println("ICRF dec $dec")
+
+
+        val currentTime = LocalDate(2022, 1, 11).atStartOfDayIn(TimeZone.UTC)
+        val result0 = (sunEphemeris(currentTime.toJT())).spherical
+        val timeInDay = result0.r * LIGHT_TIME_DAYS_PER_AU
+
+
+        println("r ${timeInDay}")
+        val currentResult =
+            LocalDate(2022, 1, 11).atStartOfDayIn(TimeZone.UTC)
+                .let { time.toJT() - (timeInDay/ 36525.0).jT }
+                .let { sunEphemeris(it) }
+                .let { EphemerisVector(it, Metadata(Orbit.Geocentric, Plane.Ecliptic, Epoch.J2000)) }
+
+//                .let { Precession.Simon1994.createElements(time.toJT()).changeEpoch(it) }
+//                .let { Nutation.IAU1980.createElements(time.toJT(), null).apply(it) }
+//                .let { Obliquity.IAU2006.createElements(time.toJT()).rotatePlane(it) }
+
+            .let { Obliquity.IAU2006.createElements(JT.J2000).rotatePlane(it) }
+            .let { Precession.IAU2006.createElements(time.toJT()).changeEpoch(it) }
+            .let { Nutation.IAU2006.createElements(time.toJT(), Obliquity.IAU2006).apply(it) }
+                .value.spherical
+
+        val rac = currentResult.phi.toRA()
+        val decC = currentResult.theta.toDec()
+        println("apparent ra $rac")
+        println("apparent dec $decC")
+
+//        assertContentEquals(
+//            doubleArrayOf(11.17653591468365, 0.0, 0.9833084337672905),
+//            FastSunEphemeris(jt).spherical.toArray(false),
+//            1e-14
+//        )
+//
+//        assertContentEquals(
+//            doubleArrayOf(11.17925484009307, 0.0, 0.9833199547171038),
+//            FastSunEphemeris(0.21.jT).spherical.toArray(false),
+//            1e-14
+//        )
+//
+//        assertContentEquals(
+//            doubleArrayOf(11.173943661007298, 0.0, 0.9832971305001807),
+//            FastSunEphemeris((-0.21).jT).spherical.toArray(false),
+//            1e-14
+//        )
+    }
+
+    @Test
+    fun invoke2() = runTest {
+
+        val marsEphemeris = object : Ephemeris {
+            override val metadata: Metadata
+                get() = Metadata(
+                    orbit = Orbit.Heliocentric,
+                    plane = Plane.Ecliptic,
+                    epoch = Epoch.J2000
+                )
+
+            override suspend fun invoke(jT: JT): Vector {
+                return getEphemerisVsop87A(Vsop87AMarsRectangularData, jT)
+            }
+
+        }
+
+        val earthEphemeris = object : Ephemeris {
+            override val metadata: Metadata
+                get() = Metadata(
+                    orbit = Orbit.Heliocentric,
+                    plane = Plane.Ecliptic,
+                    epoch = Epoch.J2000
+                )
+
+            override suspend fun invoke(jT: JT): Vector {
+                return getEphemerisVsop87A(Vsop87AEarthRectangularData, jT).spherical
+            }
+        }
+
+        val sunEphemeris = object : Ephemeris {
+            override val metadata: Metadata
+                get() = Metadata(
+                    orbit = Orbit.Heliocentric,
+                    plane = Plane.Ecliptic,
+                    epoch = Epoch.J2000
+                )
+
+            override suspend fun invoke(jT: JT): Vector {
+                return RectangularVector.Zero
+            }
+        }
+
+        val time = LocalDate(2022, 1, 11).atStartOfDayIn(TimeZone.UTC)
+        apparentPosition(
+            time.toJT(),
+            earthEphemeris,
+            marsEphemeris
         )
-        val horizonEphVector = EphemerisVector(horizonSun, Metadata(
-            orbit = Orbit.Geocentric,
-            plane = Plane.Equatorial,
-            epoch = Epoch.Apparent
-        )
-        )
 
-        val obliquity1 = Obliquity.IAU2006.createElements(jt)
-        val precession = Precession.Vondrak2011.createElements(jt)
-        val nutation = Nutation.IAU2006.createElements(jt, Obliquity.Vondrak2011)
-
-        val tElements = TransformationElements(Precession.IAU2006, jt)
-
-        val astroSun = (horizonSun *
-                (tElements.nutationElements.equatorialMatrix!! * tElements.precessionElements.fromJ2000Matrix)
-                ).spherical
-
-        val raastroSun = astroSun.phi.toDeg() / 15.0
-        val raDegastroSun = raastroSun.value.toInt()
-        val raMinastroSun = ((raastroSun.value - raDegastroSun.toDouble()) * 60.0).toInt()
-        val raSecastroSun = ((raastroSun.value - raDegastroSun.toDouble() - raMinastroSun / 60.0)) * 3600.0
-        val decSunastroSun = astroSun.theta.toDeg()
-        val rSunastroSun = astroSun.r
-        println( "a ra $raDegastroSun $raMinastroSun $raSecastroSun" )
-        println( "a dec $decSunastroSun" )
-        println( "a rSun $rSunastroSun")
-
-
-        assertContentEquals(
-            doubleArrayOf(11.17653591468365, 0.0, 0.9833084337672905),
-            FastSunEphemeris(jt).spherical.toArray(false),
-            1e-14
+        j2000Position(
+            time.toJT(),
+            earthEphemeris,
+            marsEphemeris
         )
 
-        assertContentEquals(
-            doubleArrayOf(11.17925484009307, 0.0, 0.9833199547171038),
-            FastSunEphemeris(0.21.jT).spherical.toArray(false),
-            1e-14
-        )
-
-        assertContentEquals(
-            doubleArrayOf(11.173943661007298, 0.0, 0.9832971305001807),
-            FastSunEphemeris((-0.21).jT).spherical.toArray(false),
-            1e-14
-        )
+//        assertContentEquals(
+//            doubleArrayOf(11.17653591468365, 0.0, 0.9833084337672905),
+//            FastSunEphemeris(jt).spherical.toArray(false),
+//            1e-14
+//        )
+//
+//        assertContentEquals(
+//            doubleArrayOf(11.17925484009307, 0.0, 0.9833199547171038),
+//            FastSunEphemeris(0.21.jT).spherical.toArray(false),
+//            1e-14
+//        )
+//
+//        assertContentEquals(
+//            doubleArrayOf(11.173943661007298, 0.0, 0.9832971305001807),
+//            FastSunEphemeris((-0.21).jT).spherical.toArray(false),
+//            1e-14
+//        )
     }
 
 
 }
+
+private suspend fun j2000Position(
+    jT :JT,
+    earthEphemeris: Ephemeris,
+    bodyEphemeris: Ephemeris
+) = coroutineScope {
+
+    val body = async { bodyEphemeris(jT) }
+    val earth = async { earthEphemeris(jT) }
+    val geoBody = body.await() - earth.await()
+
+    val oneWayDown = geoBody.spherical.r * LIGHT_TIME_DAYS_PER_AU
+
+    val result = jT
+        .let { bodyEphemeris(jT - (oneWayDown / JULIAN_DAYS_PER_CENTURY).jT ) - earthEphemeris(jT) }
+        .let { Obliquity.IAU2006.createElements(JT.J2000).rotatePlane(it, Plane.Equatorial) }
+        .spherical
+
+    val rac = result.phi.toRA()
+    val decC = result.theta.toDec()
+    println("j2000 ra $rac")
+    println("j2000 dec $decC")
+}
+
+private suspend fun apparentPosition(
+    jT :JT,
+    earthEphemeris: Ephemeris,
+    bodyEphemeris: Ephemeris
+) = coroutineScope {
+
+    val body = async { bodyEphemeris(jT) }
+    val earth = async { earthEphemeris(jT) }
+    val geoBody = body.await() - earth.await()
+
+    val oneWayDown = geoBody.spherical.r * LIGHT_TIME_DAYS_PER_AU
+
+    val result = geoBody
+        .let {
+            val earthVelocity = earthEphemeris.getVelocity(
+                earth.await(),
+                jT
+            )
+            val bodyVelocity = bodyEphemeris.getVelocity(
+                body.await(),
+                jT,
+            )
+            it - (bodyVelocity - earthVelocity) * oneWayDown
+        }
+        .let { Precession.Williams1994.createElements(jT).changeEpoch(it, Epoch.Apparent) }
+        .let { Precession.Williams1994.createElements(jT).changeEpoch(it, Epoch.J2000) }
+        .let { Precession.Williams1994.createElements(jT).changeEpoch(it, Epoch.Apparent) }
+        .let { Nutation.IAU1980.createElements(jT, Obliquity.IAU2006).apply(it, Plane.Ecliptic) }
+        .let { Obliquity.IAU2006.createElements(jT).rotatePlane(it, Plane.Equatorial) }
+
+
+//        .let { Obliquity.IAU2006.createElements(JT.J2000).rotatePlane(it, Plane.Equatorial) }
+//        .let { Precession.IAU2006.createElements(jT).changeEpoch(it, Epoch.Apparent) }
+//        .let { Precession.IAU2006.createElements(jT).changeEpoch(it, Epoch.J2000) }
+//        .let { Precession.IAU2006.createElements(jT).changeEpoch(it, Epoch.Apparent) }
+//        .let { Nutation.IAU2006.createElements(jT, Obliquity.IAU2006).apply(it, Plane.Equatorial) }
+        .spherical
+
+    val rac = result.phi.toRA()
+    val decC = result.theta.toDec()
+    println("apparent ra $rac")
+    println("apparent dec $decC")
+}
+
+private class VsopEphemeris(private val bodyData: VsopRectangularData,
+                            private val earthEphemeris: Ephemeris,
+                            private val jT0: JT
+                            ) : Ephemeris {
+
+    private val obliquity = Obliquity.IAU2006.createElements(JT.J2000)
+
+    override val metadata: Metadata
+        get() = TODO("Not yet implemented")
+
+    override suspend fun invoke(jT: JT): Vector {
+        return getEphemerisVsop87A(bodyData, jT)
+    }
+
+    suspend fun getE(jT: JT): Vector = coroutineScope {
+
+        val body = async { invoke(jT) }
+        val earth = async { earthEphemeris(jT) }
+        val geoBody = body.await() - earth.await()
+
+        val oneWayDown = geoBody.spherical.r * LIGHT_TIME_DAYS_PER_AU
+
+        val result = geoBody
+            .let {
+                val earthVelocity = earthEphemeris.getVelocity(
+                    earth.await(),
+                    jT
+                )
+                val bodyVelocity = getVelocity(
+                    body.await(),
+                    jT,
+                )
+                it - (bodyVelocity - earthVelocity) * oneWayDown
+            }
+            .let { obliquity.rotatePlane(it, Plane.Equatorial) }
+            .let { Precession.IAU2006.createElements(jT).changeEpoch(it, Epoch.Apparent) }
+            .let { Nutation.IAU2006.createElements(jT, Obliquity.IAU2006).apply(it, Plane.Equatorial) }
+            .spherical
+
+        val rac = result.phi.toRA()
+        val decC = result.theta.toDec()
+        println("apparent ra $rac")
+        println("apparent dec $decC")
+        result
+    }
+
+}
+
+//@Heliocentric
+//@Ecliptic
+//private suspend fun getBodyVelocity(
+//    currentCoordinates: Vector, jT: JT, lightTime: Double = 0.01,
+//    @Heliocentric
+//    @Ecliptic
+//    @J2000
+//    findCoordinates: suspend (jT: JT) -> Vector
+//): Vector {
+//    //  val body = findCoordinates(jT)
+//    val bodyPlus = findCoordinates(jT + (lightTime / JULIAN_DAYS_PER_CENTURY).jT)
+//    return (bodyPlus - currentCoordinates) / lightTime
+//}

@@ -49,6 +49,8 @@ const val AU = 149597870.7
 /** Light time in days for 1 AU.  */
 const val LIGHT_TIME_DAYS_PER_AU: Double = AU * 1000.0 / (SPEED_OF_LIGHT * SECONDS_PER_DAY)
 
-
 /** Length of a sidereal day in days according to IERS Conventions.  */
 const val SIDEREAL_DAY_LENGTH = 1.0027378119113546
+
+/** Heliocentric gravitational constant, in m^3/s^2 (Pitjeva 2015). */
+const val SUN_GRAVITATIONAL_CONSTANT = 1.32712440042e20
