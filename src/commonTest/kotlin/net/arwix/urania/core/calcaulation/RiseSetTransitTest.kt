@@ -11,7 +11,7 @@ import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.toJT
 import net.arwix.urania.core.calendar.toMJD
 import net.arwix.urania.core.ephemeris.*
-import net.arwix.urania.core.ephemeris.calculation.RiseSetTransit
+import net.arwix.urania.core.ephemeris.calculation.RiseSetTransitCalculation
 import net.arwix.urania.core.ephemeris.fast.FastSunEphemeris
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.deg
@@ -53,15 +53,15 @@ class RiseSetTransitTest {
                     latitude = (60.0 + 3.0 / 60.0 + 32.6 / 60.0 / 60.0).deg.toRad(),
                     altitude = 0.0),
             )
-            val riseSetTransit = RiseSetTransit()
+            val riseSetTransitCalculation = RiseSetTransitCalculation()
 
-            val obtainResult: Set<RiseSetTransit.Result> = riseSetTransit.obtainNextRiseSetTransit(
+            val obtainResult: Set<RiseSetTransitCalculation.Result> = riseSetTransitCalculation.obtainNextResults(
                 instant.toMJD(), observer,
-                eph = aSunEphemeris,
+                ephemeris = aSunEphemeris,
                 request = setOf(
-                    RiseSetTransit.Request.RiseSet.HorizonAstronomical((15 / 60.0).deg.toRad() , Radian.Zero),
-                    RiseSetTransit.Request.UpperTransit(),
-                    RiseSetTransit.Request.DownTransit()
+                    RiseSetTransitCalculation.Request.RiseSet.HorizonAstronomical((15 / 60.0).deg.toRad() , Radian.Zero),
+                    RiseSetTransitCalculation.Request.UpperTransit(),
+                    RiseSetTransitCalculation.Request.DownTransit()
                 ),
             )
 
@@ -71,25 +71,25 @@ class RiseSetTransitTest {
 
             obtainResult.forEach {
                 when (it) {
-                    is RiseSetTransit.Result.Rise.Value -> {
+                    is RiseSetTransitCalculation.Result.Rise.Value -> {
                         assertEquals(
                             "2022-01-14T06:47:42",
                             it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
                         )
                     }
-                    is RiseSetTransit.Result.Set.Value -> {
+                    is RiseSetTransitCalculation.Result.Set.Value -> {
                         assertEquals(
                             "2022-01-14T13:25:51",
                             it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
                         )
                     }
-                    is RiseSetTransit.Result.UpperTransit -> {
+                    is RiseSetTransitCalculation.Result.UpperTransit -> {
                         assertEquals(
                             "2022-01-14T10:06:31",
                             it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
                         )
                     }
-                    is RiseSetTransit.Result.DownTransit -> {
+                    is RiseSetTransitCalculation.Result.DownTransit -> {
                         assertEquals(
                             "2022-01-13T22:06:20",
                             it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)

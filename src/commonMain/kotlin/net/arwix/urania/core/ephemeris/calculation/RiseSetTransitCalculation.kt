@@ -5,6 +5,9 @@ package net.arwix.urania.core.ephemeris.calculation
 import kotlinx.datetime.Instant
 import net.arwix.urania.core.calendar.*
 import net.arwix.urania.core.ephemeris.Ephemeris
+import net.arwix.urania.core.ephemeris.Epoch
+import net.arwix.urania.core.ephemeris.Orbit
+import net.arwix.urania.core.ephemeris.Plane
 import net.arwix.urania.core.math.RAD_TO_DAY
 import net.arwix.urania.core.math.SECONDS_PER_DAY
 import net.arwix.urania.core.math.SIDEREAL_DAY_LENGTH
@@ -18,7 +21,7 @@ import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
 
-class RiseSetTransit {
+class RiseSetTransitCalculation {
 
     sealed class Request(open val isStar: Boolean) {
         sealed class RiseSet(open val elevation: Radian, isStar: Boolean = false) : Request(isStar) {
@@ -78,29 +81,29 @@ class RiseSetTransit {
         data class Error(override val request: Request) : Result(request)
     }
 
-    private sealed class Computed {
-        data class UpperTransit(val mjd: MJD, val geometricElevation: Radian) : Computed()
-        data class DownTransit(val mjd: MJD, val geometricElevation: Radian) : Computed()
-        sealed class Rise : Computed() {
+    private sealed class InnerResult {
+        data class UpperTransit(val mjd: MJD, val geometricElevation: Radian) : InnerResult()
+        data class DownTransit(val mjd: MJD, val geometricElevation: Radian) : InnerResult()
+        sealed class Rise : InnerResult() {
             data class Value(val mjd: MJD) : Rise()
             object AlwaysBelowHorizon : Rise()
             object Circumpolar : Rise()
         }
 
-        sealed class Set : Computed() {
+        sealed class Set : InnerResult() {
             data class Value(val mjd: MJD) : Set()
             object AlwaysBelowHorizon : Set()
             object Circumpolar : Set()
         }
 
-        object None : Computed()
+        object None : InnerResult()
     }
 
-    private sealed class Event {
-        object UpperTransit : Event()
-        object DownTransit : Event()
-        data class Rise(val e: Radian) : Event()
-        data class Set(val e: Radian) : Event()
+    private sealed class InnerRequest {
+        object UpperTransit : InnerRequest()
+        object DownTransit : InnerRequest()
+        data class Rise(val e: Radian) : InnerRequest()
+        data class Set(val e: Radian) : InnerRequest()
 
         fun getElevation() = when (this) {
             is Rise -> e
@@ -114,60 +117,60 @@ class RiseSetTransit {
         time: MJD,
         position: Observer.Position,
         eph: Ephemeris,
-        event: Event,
-    ): Computed {
+        innerRequest: InnerRequest,
+    ): InnerResult {
 
         val body = eph.invoke(time.toJT()).spherical
         val siderealTime = time.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
 
         //TODO if (obs != EARTH && obs != NOT_A_PLANET)
 
-        if (event == Event.UpperTransit) {
+        if (innerRequest == InnerRequest.UpperTransit) {
 
             val dTransitTime = celestialHoursToEarthTime * (body.phi - siderealTime).normalize()
 
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return Computed.UpperTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.UpperTransit(time + dTransitTime.mJD, transitAltitude)
         }
 
-        if (event == Event.DownTransit) {
+        if (innerRequest == InnerRequest.DownTransit) {
 
             val dTransitTime = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() - PI.rad)
 
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return Computed.DownTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.DownTransit(time + dTransitTime.mJD, transitAltitude)
         }
 
-        val elevation = event.getElevation()!!
+        val elevation = innerRequest.getElevation()!!
 
         val cAngle = (sin(elevation) - sin(position.latitude) * sin(body.theta)) /
                 (cos(position.latitude) * cos(body.theta))
 
-        return when (event) {
-            is Event.Rise -> {
+        return when (innerRequest) {
+            is InnerRequest.Rise -> {
                 if (cAngle > 1.0) {
-                    Computed.Rise.AlwaysBelowHorizon
+                    InnerResult.Rise.AlwaysBelowHorizon
                 } else if (cAngle < -1.0) {
-                    Computed.Rise.Circumpolar
+                    InnerResult.Rise.Circumpolar
                 } else {
                     val hour = acos(cAngle).rad
                     val riseTime = celestialHoursToEarthTime * (body.phi - hour - siderealTime).normalize()
-                    Computed.Rise.Value(time + riseTime.mJD)
+                    InnerResult.Rise.Value(time + riseTime.mJD)
                 }
             }
-            is Event.Set -> {
+            is InnerRequest.Set -> {
                 if (cAngle > 1.0) {
-                    Computed.Set.AlwaysBelowHorizon
+                    InnerResult.Set.AlwaysBelowHorizon
                 } else if (cAngle < -1.0) {
-                    Computed.Set.Circumpolar
+                    InnerResult.Set.Circumpolar
                 } else {
                     val hour = acos(cAngle).rad
                     val setTime = celestialHoursToEarthTime * (body.phi + hour - siderealTime).normalize()
-                    Computed.Set.Value(time + setTime.mJD)
+                    InnerResult.Set.Value(time + setTime.mJD)
                 }
             }
             else -> throw IllegalStateException()
@@ -175,47 +178,51 @@ class RiseSetTransit {
 
     }
 
-    suspend fun obtainNextRiseSetTransit(
+    suspend fun obtainNextResults(
         time: MJD,
-        obs: Observer,
-        eph: Ephemeris,
+        observer: Observer,
+        ephemeris: Ephemeris,
         request: Set<Request>,
     ): Set<Result> {
+        if (ephemeris.metadata.orbit != Orbit.Geocentric ||
+            ephemeris.metadata.epoch != Epoch.Apparent ||
+            ephemeris.metadata.plane != Plane.Topocentric
+        ) throw IllegalArgumentException()
         // Obtain event to better than 0.5 seconds of precision
         return request.flatMap {
             when (it) {
                 is Request.RiseSet -> {
-                    listOf(it to Event.Rise(it.elevation), it to Event.Set(it.elevation))
+                    listOf(it to InnerRequest.Rise(it.elevation), it to InnerRequest.Set(it.elevation))
                 }
                 is Request.UpperTransit -> {
-                    listOf(it to Event.UpperTransit)
+                    listOf(it to InnerRequest.UpperTransit)
                 }
                 is Request.DownTransit -> {
-                    listOf(it to Event.DownTransit)
+                    listOf(it to InnerRequest.DownTransit)
                 }
             }
         }.map { (request, event) ->
             request to obtainNextRiseEvents(
                 time,
-                obs.position,
-                eph,
+                observer.position,
+                ephemeris,
                 event
             )
         }.map { (request, computed) ->
             when (computed) {
-                Computed.None -> Result.Error(request)
-                Computed.Rise.AlwaysBelowHorizon -> Result.Rise.AlwaysBelowHorizon(request)
-                Computed.Rise.Circumpolar -> Result.Rise.Circumpolar(request)
-                is Computed.Rise.Value -> Result.Rise.Value(request, computed.mjd.toInstant())
-                Computed.Set.AlwaysBelowHorizon -> Result.Set.AlwaysBelowHorizon(request)
-                Computed.Set.Circumpolar -> Result.Set.Circumpolar(request)
-                is Computed.Set.Value -> Result.Set.Value(request, computed.mjd.toInstant())
-                is Computed.UpperTransit -> Result.UpperTransit(
+                InnerResult.None -> Result.Error(request)
+                InnerResult.Rise.AlwaysBelowHorizon -> Result.Rise.AlwaysBelowHorizon(request)
+                InnerResult.Rise.Circumpolar -> Result.Rise.Circumpolar(request)
+                is InnerResult.Rise.Value -> Result.Rise.Value(request, computed.mjd.toInstant())
+                InnerResult.Set.AlwaysBelowHorizon -> Result.Set.AlwaysBelowHorizon(request)
+                InnerResult.Set.Circumpolar -> Result.Set.Circumpolar(request)
+                is InnerResult.Set.Value -> Result.Set.Value(request, computed.mjd.toInstant())
+                is InnerResult.UpperTransit -> Result.UpperTransit(
                     request,
                     computed.mjd.toInstant(),
                     computed.geometricElevation.toDeg()
                 )
-                is Computed.DownTransit -> Result.DownTransit(
+                is InnerResult.DownTransit -> Result.DownTransit(
                     request,
                     computed.mjd.toInstant(),
                     computed.geometricElevation.toDeg()
@@ -228,9 +235,9 @@ class RiseSetTransit {
         time: MJD,
         position: Observer.Position,
         ephemeris: Ephemeris,
-        event: Event,
+        innerRequest: InnerRequest,
         isStar: Boolean = false
-    ): Computed {
+    ): InnerResult {
         val notYetCalculated = -1.0
         val precisionInSeconds = 0.5
         var n = 0
@@ -238,16 +245,16 @@ class RiseSetTransit {
         var lastTimeEvent = notYetCalculated
         var dt = notYetCalculated
         var timeEvent: Double = time.value
-        var result: Computed
+        var result: InnerResult
         var triedBefore = false
         do {
             n++
-            result = nextRiseSetTransit(timeEvent.mJD, position, ephemeris, event)
+            result = nextRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
             val resultTime = when (result) {
-                is Computed.Rise.Value -> result.mjd
-                is Computed.Set.Value -> result.mjd
-                is Computed.UpperTransit -> result.mjd
-                is Computed.DownTransit -> result.mjd
+                is InnerResult.Rise.Value -> result.mjd
+                is InnerResult.Set.Value -> result.mjd
+                is InnerResult.UpperTransit -> result.mjd
+                is InnerResult.DownTransit -> result.mjd
                 else -> null
             }
 
@@ -257,10 +264,10 @@ class RiseSetTransit {
             } else {
                 @Suppress("NON_EXHAUSTIVE_WHEN_STATEMENT")
                 when (result) {
-                    Computed.Rise.AlwaysBelowHorizon,
-                    Computed.Rise.Circumpolar,
-                    Computed.Set.AlwaysBelowHorizon,
-                    Computed.Set.Circumpolar -> {
+                    InnerResult.Rise.AlwaysBelowHorizon,
+                    InnerResult.Rise.Circumpolar,
+                    InnerResult.Set.AlwaysBelowHorizon,
+                    InnerResult.Set.Circumpolar -> {
                         if (!isStar) {
                             if (triedBefore) {
                                 break
@@ -270,8 +277,8 @@ class RiseSetTransit {
                                     time,
                                     position,
                                     ephemeris,
-                                    Event.UpperTransit
-                                ) as Computed.UpperTransit
+                                    InnerRequest.UpperTransit
+                                ) as InnerResult.UpperTransit
                                 timeEvent = c.mjd.value
                                 dt = 2.0 * precisionInSeconds / SECONDS_PER_DAY
                             }
@@ -283,14 +290,14 @@ class RiseSetTransit {
         } while (abs(dt) > precisionInSeconds / SECONDS_PER_DAY && n < nMax)
 
         return if (n == nMax) {
-            Computed.None
+            InnerResult.None
         } else {
             result
         }
     }
 
     private companion object {
-        const val celestialHoursToEarthTime: Double = RAD_TO_DAY / SIDEREAL_DAY_LENGTH
+        private const val celestialHoursToEarthTime: Double = RAD_TO_DAY / SIDEREAL_DAY_LENGTH
     }
 
 
