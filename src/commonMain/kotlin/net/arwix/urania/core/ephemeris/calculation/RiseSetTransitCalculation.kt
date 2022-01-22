@@ -186,7 +186,7 @@ class RiseSetTransitCalculation {
     ): Set<Result> {
         if (ephemeris.metadata.orbit != Orbit.Geocentric ||
             ephemeris.metadata.epoch != Epoch.Apparent ||
-            ephemeris.metadata.plane != Plane.Topocentric
+            ephemeris.metadata.plane != Plane.Equatorial
         ) throw IllegalArgumentException()
         // Obtain event to better than 0.5 seconds of precision
         return request.flatMap {

@@ -36,7 +36,7 @@ class RiseSetTransitTest {
             override val metadata: Metadata
                 get() = Metadata(
                     orbit = Orbit.Geocentric,
-                    plane = Plane.Topocentric,
+                    plane = Plane.Equatorial,
                     epoch = Epoch.Apparent
                 )
 
