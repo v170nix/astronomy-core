@@ -1,6 +1,6 @@
 @file:Suppress("EXPERIMENTAL_API_USAGE")
 
-package net.arwix.urania.core.calcaulation
+package net.arwix.urania.core.calculation
 
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
@@ -53,7 +53,7 @@ class RiseSetTransitTest {
                     latitude = (60.0 + 3.0 / 60.0 + 32.6 / 60.0 / 60.0).deg.toRad(),
                     altitude = 0.0),
             )
-            val riseSetTransitCalculation = RiseSetTransitCalculation()
+            val riseSetTransitCalculation = RiseSetTransitCalculation
 
             val obtainResult: Set<RiseSetTransitCalculation.Result> = riseSetTransitCalculation.obtainNextResults(
                 instant.toMJD(), observer,
