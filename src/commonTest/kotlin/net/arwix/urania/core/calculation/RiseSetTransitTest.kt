@@ -67,8 +67,6 @@ class RiseSetTransitTest {
 
             assertEquals(4, obtainResult.size)
 
-
-
             obtainResult.forEach {
                 when (it) {
                     is RiseSetTransitCalculation.Result.Rise.Value -> {
@@ -91,11 +89,88 @@ class RiseSetTransitTest {
                     }
                     is RiseSetTransitCalculation.Result.DownTransit -> {
                         assertEquals(
-                            "2022-01-13T22:06:20",
+                            "2022-01-14T22:06:42",
                             it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
                         )
                     }
                     else -> throw IllegalStateException()
+                }
+            }
+
+        }
+
+    }
+
+    @Test
+    fun obtainCertainRiseSetTransitMurmansk() {
+
+        val instant = LocalDate(1995, 5, 23).atStartOfDayIn(TimeZone.UTC)
+        val sunEphemeris: Ephemeris = FastSunEphemeris
+        val obliquity = Obliquity.Simon1994.createElements(instant.toJT())
+
+        println("mjd ${instant.toMJD()}")
+
+        val aSunEphemeris: Ephemeris = object : Ephemeris {
+            override val metadata: Metadata
+                get() = Metadata(
+                    orbit = Orbit.Geocentric,
+                    plane = Plane.Equatorial,
+                    epoch = Epoch.Apparent
+                )
+
+            override suspend fun invoke(jT: JT): Vector {
+                return obliquity.rotatePlane(sunEphemeris(jT), Plane.Equatorial)
+            }
+
+        }
+
+        runTest {
+            val observer = Observer(
+                position = Observer.Position(
+                    longitude = (33.0 + 5.0 / 60.0 + 8.1 / 60.0 / 60.0).deg.toRad(),
+                    latitude = (68.0 + 58.0 / 60.0 + 23.9 / 60.0 / 60.0).deg.toRad(),
+                    altitude = 0.0),
+            )
+            val riseSetTransitCalculation = RiseSetTransitCalculation
+
+            val obtainResult: Set<RiseSetTransitCalculation.Result> = riseSetTransitCalculation.obtainNextResults(
+                instant.toMJD(), observer,
+                ephemeris = aSunEphemeris,
+                request = setOf(
+                    RiseSetTransitCalculation.Request.RiseSet.HorizonAstronomical((15 / 60.0).deg.toRad() , Radian.Zero),
+                    RiseSetTransitCalculation.Request.UpperTransit(),
+                    RiseSetTransitCalculation.Request.DownTransit()
+                ),
+            )
+
+//            assertEquals(4, obtainResult.size)
+
+
+
+            obtainResult.forEach {
+                when (it) {
+//                    is RiseSetTransitCalculation.Result.Rise.Circumpolar -> {
+//
+//                    }
+//                    is RiseSetTransitCalculation.Result.Set.Value -> {
+//                        assertEquals(
+//                            "1995-05-21T21:38:06",
+//                            it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
+//                        )
+//                    }
+//                    is RiseSetTransitCalculation.Result.UpperTransit -> {
+//                        assertEquals(
+//                            "1995-05-21T09:43:10",
+//                            it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
+//                        )
+//                    }
+//                    is RiseSetTransitCalculation.Result.DownTransit -> {
+//                        assertEquals(
+//                            "1995-05-20T21:43:08",
+//                            it.time.toLocalDateTime(TimeZone.UTC).toString().substring(0..18)
+//                        )
+//                    }
+                    else -> println(it)
                 }
             }
 

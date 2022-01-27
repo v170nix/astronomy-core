@@ -16,10 +16,10 @@ import net.arwix.urania.core.observer.Observer
 import net.arwix.urania.core.spherical
 import net.arwix.urania.core.toDeg
 import net.arwix.urania.core.toRad
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.acos
 import kotlin.math.asin
+
 
 object RiseSetTransitCalculation {
 
@@ -81,9 +81,54 @@ object RiseSetTransitCalculation {
         data class Error(override val request: Request) : Result(request)
     }
 
+    private sealed class InnerRequest {
+        object UpperTransit : InnerRequest()
+        object DownTransit : InnerRequest()
+
+        data class Rise(val e: Radian) : InnerRequest() {
+
+            internal companion object {
+                inline fun toInnerResult(
+                    cosAngle: Double,
+                    getRiseDate: (hour: Radian) -> MJD
+                ) = if (cosAngle > 1.0) {
+                    InnerResult.Rise.AlwaysBelowHorizon
+                } else if (cosAngle < -1.0) {
+                    InnerResult.Rise.Circumpolar
+                } else {
+                    InnerResult.Rise.Value(getRiseDate(acos(cosAngle).rad))
+                }
+            }
+        }
+
+        data class Set(val e: Radian) : InnerRequest() {
+
+            internal companion object {
+                inline fun toInnerResult(
+                    cosAngle: Double,
+                    getSetDate: (hour: Radian) -> MJD
+                ) = if (cosAngle > 1.0) {
+                    InnerResult.Set.AlwaysBelowHorizon
+                } else if (cosAngle < -1.0) {
+                    InnerResult.Set.Circumpolar
+                } else {
+                    InnerResult.Set.Value(getSetDate(acos(cosAngle).rad))
+                }
+            }
+        }
+
+        fun getElevation() = when (this) {
+            is Rise -> e
+            is Set -> e
+            UpperTransit -> null
+            DownTransit -> null
+        }
+    }
+
     private sealed class InnerResult {
         data class UpperTransit(val mjd: MJD, val geometricElevation: Radian) : InnerResult()
         data class DownTransit(val mjd: MJD, val geometricElevation: Radian) : InnerResult()
+
         sealed class Rise : InnerResult() {
             data class Value(val mjd: MJD) : Rise()
             object AlwaysBelowHorizon : Rise()
@@ -99,36 +144,20 @@ object RiseSetTransitCalculation {
         object None : InnerResult()
     }
 
-    private sealed class InnerRequest {
-        object UpperTransit : InnerRequest()
-        object DownTransit : InnerRequest()
-        data class Rise(val e: Radian) : InnerRequest()
-        data class Set(val e: Radian) : InnerRequest()
-
-        fun getElevation() = when (this) {
-            is Rise -> e
-            is Set -> e
-            UpperTransit -> null
-            DownTransit -> null
-        }
-    }
-
-    private suspend fun nextRiseSetTransit(
+    private suspend fun stepRiseSetTransit(
         time: MJD,
         position: Observer.Position,
         eph: Ephemeris,
         innerRequest: InnerRequest,
+        isNextStep: Boolean = true
     ): InnerResult {
 
         val body = eph.invoke(time.toJT()).spherical
         val siderealTime = time.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
-
-        //TODO if (obs != EARTH && obs != NOT_A_PLANET)
+        val delta = if (isNextStep) Radian.Zero else -Radian.PI2
 
         if (innerRequest == InnerRequest.UpperTransit) {
-
-            val dTransitTime = celestialHoursToEarthTime * (body.phi - siderealTime).normalize()
-
+            val dTransitTime = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() + delta)
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
@@ -136,9 +165,7 @@ object RiseSetTransitCalculation {
         }
 
         if (innerRequest == InnerRequest.DownTransit) {
-
-            val dTransitTime = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() - PI.rad)
-
+            val dTransitTime = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() + Radian.PI + delta)
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
@@ -152,25 +179,77 @@ object RiseSetTransitCalculation {
 
         return when (innerRequest) {
             is InnerRequest.Rise -> {
-                if (cAngle > 1.0) {
-                    InnerResult.Rise.AlwaysBelowHorizon
-                } else if (cAngle < -1.0) {
-                    InnerResult.Rise.Circumpolar
-                } else {
-                    val hour = acos(cAngle).rad
-                    val riseTime = celestialHoursToEarthTime * (body.phi - hour - siderealTime).normalize()
-                    InnerResult.Rise.Value(time + riseTime.mJD)
+                InnerRequest.Rise.toInnerResult(cAngle) { hour ->
+                    val riseTime = celestialHoursToEarthTime * ((body.phi - hour - siderealTime).normalize() + delta)
+                    time + riseTime.mJD
                 }
             }
             is InnerRequest.Set -> {
-                if (cAngle > 1.0) {
-                    InnerResult.Set.AlwaysBelowHorizon
-                } else if (cAngle < -1.0) {
-                    InnerResult.Set.Circumpolar
-                } else {
-                    val hour = acos(cAngle).rad
-                    val setTime = celestialHoursToEarthTime * (body.phi + hour - siderealTime).normalize()
+                InnerRequest.Set.toInnerResult(cAngle) { hour ->
+                    val setTime = celestialHoursToEarthTime * ((body.phi + hour - siderealTime).normalize() + delta)
                     InnerResult.Set.Value(time + setTime.mJD)
+                    time + setTime.mJD
+                }
+            }
+            else -> throw IllegalStateException()
+        }
+    }
+
+    private suspend fun nearestRiseSetTransit(
+        time: MJD,
+        position: Observer.Position,
+        eph: Ephemeris,
+        innerRequest: InnerRequest,
+    ): InnerResult {
+
+        val body = eph.invoke(time.toJT()).spherical
+        val siderealTime = time.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
+
+        if (innerRequest == InnerRequest.UpperTransit) {
+
+            val dTransitTime1 = celestialHoursToEarthTime * (body.phi - siderealTime).normalize()
+            val dTransitTime2 = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() - Radian.PI2)
+            val dTransitTime = if (abs(dTransitTime2) < abs(dTransitTime1)) dTransitTime2 else dTransitTime1
+
+            val transitAltitude =
+                asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
+
+            return InnerResult.UpperTransit(time + dTransitTime.mJD, transitAltitude)
+        }
+
+        if (innerRequest == InnerRequest.DownTransit) {
+
+            val dTransitTime1 = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() + Radian.PI)
+            val dTransitTime2 = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() - Radian.PI)
+            val dTransitTime = if (abs(dTransitTime2) < abs(dTransitTime1)) dTransitTime2 else dTransitTime1
+
+            val transitAltitude =
+                asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
+
+            return InnerResult.DownTransit(time + dTransitTime.mJD, transitAltitude)
+        }
+
+        val elevation = innerRequest.getElevation()!!
+
+        val cAngle = (sin(elevation) - sin(position.latitude) * sin(body.theta)) /
+                (cos(position.latitude) * cos(body.theta))
+
+
+        return when (innerRequest) {
+            is InnerRequest.Rise -> {
+                InnerRequest.Rise.toInnerResult(cAngle) { hour ->
+                    val riseTime1 = celestialHoursToEarthTime * (body.phi - hour - siderealTime).normalize()
+                    val riseTime2 =
+                        celestialHoursToEarthTime * ((body.phi - hour - siderealTime).normalize() - Radian.PI2)
+                    time + (if (abs(riseTime2) < abs(riseTime1)) riseTime2 else riseTime1).mJD
+                }
+            }
+            is InnerRequest.Set -> {
+                InnerRequest.Set.toInnerResult(cAngle) { hour ->
+                    val setTime1 = celestialHoursToEarthTime * (body.phi + hour - siderealTime).normalize()
+                    val setTime2 =
+                        celestialHoursToEarthTime * ((body.phi + hour - siderealTime).normalize() - Radian.PI2)
+                    time + (if (abs(setTime2) < abs(setTime1)) setTime2 else setTime1).mJD
                 }
             }
             else -> throw IllegalStateException()
@@ -249,7 +328,11 @@ object RiseSetTransitCalculation {
         var triedBefore = false
         do {
             n++
-            result = nextRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
+            result = if (n == 1)
+                stepRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
+            else
+                nearestRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
+
             val resultTime = when (result) {
                 is InnerResult.Rise.Value -> result.mjd
                 is InnerResult.Set.Value -> result.mjd
@@ -273,7 +356,7 @@ object RiseSetTransitCalculation {
                                 break
                             } else {
                                 triedBefore = true
-                                val c = nextRiseSetTransit(
+                                val c = stepRiseSetTransit(
                                     time,
                                     position,
                                     ephemeris,

@@ -18,9 +18,9 @@ value class Radian(val value: Double): Comparable<Radian> {
     override fun compareTo(other: Radian) = value.compareTo(other.value)
 
     inline fun normalize(): Radian {
-        if (this >= Zero && this < PI2) return this
         if (this < Zero && this >= -PI2) return this + PI2
         if (this >= PI2 && this < PI4) return this - PI2
+        if (this >= Zero && this < PI2) return this
 
         var d = this - PI2 * floor(this / PI2)
         // Can't use Math.IEEE remainder here because remainder differs
