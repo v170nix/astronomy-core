@@ -33,6 +33,10 @@ inline fun MJD.getGreenwichMeanSiderealTime(method: SiderealTimeMethod): Radian 
     }
 }
 
+inline fun MJD.getLocalMeanSiderealTime(method: SiderealTimeMethod, position: Observer.Position): Radian {
+    return getGreenwichMeanSiderealTime(method) + position.longitude
+}
+
 inline fun MJD.getGMSTLaskar1986(): Radian {
     val mJD0 = floor(this.value).mJD
     val jT0 = mJD0.toJT()
@@ -67,13 +71,29 @@ inline fun MJD.getGMSTIAU20xx(isIAU2000: Boolean): Radian {
     return gmst.rad.normalize()
 }
 
-fun MJD.getGreenwichApparentSiderealTime(method: SiderealTimeMethod): Radian {
+inline fun MJD.getGreenwichApparentSiderealTime(method: SiderealTimeMethod): Radian {
     return getGreenwichMeanSiderealTime(method) + getEquationOfEquinoxes(toJT())
 }
 
-fun MJD.getLocalApparentSiderealTime(method: SiderealTimeMethod, position: Observer.Position): Radian {
-    return getGreenwichMeanSiderealTime(method) + position.longitude
+inline fun MJD.getLocalApparentSiderealTime(method: SiderealTimeMethod, position: Observer.Position): Radian {
+    return getGreenwichApparentSiderealTime(method) + position.longitude
 }
+
+inline fun MJD.getGreenwichApparentSiderealTime(
+    method: SiderealTimeMethod,
+    getEquationOfEquinoxes: () -> Radian
+): Radian {
+    return getGreenwichMeanSiderealTime(method) + getEquationOfEquinoxes()
+}
+
+inline fun MJD.getLocalApparentSiderealTime(
+    method: SiderealTimeMethod,
+    position: Observer.Position,
+    getEquationOfEquinoxes: () -> Radian
+): Radian {
+    return getGreenwichApparentSiderealTime(method, getEquationOfEquinoxes) + position.longitude
+}
+
 
 /**
  * Returns equation of equinoxes
