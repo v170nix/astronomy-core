@@ -23,10 +23,10 @@ fun topocentricTransformation(instant: Instant, body: SphericalVector, position:
         getEquationOfEquinoxes(obliquity.meanObliquity, nutation.angles)
     }
 //    lst = ((18.0 + 1.0 / 60.0  + 53.6475 / 60.0 / 60.0) * 15.0).deg.toRad()
-    println("L_Ap_Sid_Time ${lst.toRA()}")
+    println("L_Ap_Sid_Time ${lst.toRightAscension()}")
 
     lst = instant.toMJD(false).getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
-    println("L_Ap_Sid_Time ${lst.toRA()}")
+    println("L_Ap_Sid_Time ${lst.toRightAscension()}")
 
 
     val angle = lst - body.phi
@@ -57,7 +57,7 @@ fun topocentricTransformation(instant: Instant, body: SphericalVector, position:
         y / abs(y) * PI_OVER_TWO
     }
 
-    println("elevation ${alt.rad.toDeg().toDec()} ${(-5.691134).deg.toDec()}")
-    println("azimuth ${azi.rad.toDeg().toRA()} ${29.171914.deg.toRA()}")
+    println("elevation ${alt.rad.toDeg().toDeclination()} ${(-5.691134).deg.toDeclination()}")
+    println("azimuth ${azi.rad.toDeg().toRightAscension()} ${29.171914.deg.toRightAscension()}")
     println("paralactic angle ${p.rad.normalize().toDeg()}")
 }

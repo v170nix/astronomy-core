@@ -27,5 +27,5 @@ class RightAscension constructor(val value: Degree) {
 
 inline val RightAscension.deg: Degree get() = this.value
 
-inline fun Degree.toRA() = RightAscension(this)
-inline fun Radian.toRA() = RightAscension(this.toDeg())
+inline fun Degree.toRightAscension() = RightAscension(this)
+inline fun Radian.toRightAscension() = RightAscension(this.toDeg())

@@ -33,5 +33,5 @@ class Declination constructor(val value: Degree) {
 
 inline val Declination.deg: Degree get() = this.value
 
-inline fun Degree.toDec() = Declination(this)
-inline fun Radian.toDec() = Declination(this.toDeg())
+inline fun Degree.toDeclination() = Declination(this)
+inline fun Radian.toDeclination() = Declination(this.toDeg())

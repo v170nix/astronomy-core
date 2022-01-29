@@ -7,7 +7,7 @@ import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.ephemeris.*
 import net.arwix.urania.core.kepler.KeplerElementsObject
-import net.arwix.urania.core.kepler.getSimonJ2000KeplerElements
+import net.arwix.urania.core.kepler.getKeplerElementsSimonJ2000
 import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.vector.SphericalVector
 import net.arwix.urania.core.math.vector.Vector
@@ -45,7 +45,7 @@ object FastSunEphemeris: Ephemeris {
         val nutation: Radian = getNutation(jT)
 
 
-        val ecc = getSimonJ2000KeplerElements(KeplerElementsObject.Earth).getEccentricity(jT)
+        val ecc = getKeplerElementsSimonJ2000(KeplerElementsObject.Earth).getEccentricity(jT)
         val v = solarAnomaly + c.deg.toRad()
         val distance = 1.000001018 * (1.0 - ecc * ecc) / (1.0 + ecc * cos(v)) // In UA
 
