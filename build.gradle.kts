@@ -60,8 +60,8 @@ kotlin {
                 implementation(kotlin("test"))
                 implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
                 implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
-                implementation ("net.arwix.urania:astronomy-vsop87a:0.0.2")
-                implementation ("net.arwix.urania:astronomy-moshier:1.0-alpha07")
+//                implementation ("net.arwix.urania:astronomy-vsop87a:0.0.2")
+                implementation ("net.arwix.urania:astronomy-moshier:1.0-alpha10")
             }
         }
         val jvmMain by getting
