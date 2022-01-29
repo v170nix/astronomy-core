@@ -150,13 +150,14 @@ object RiseSetTransitCalculation {
         eph: Ephemeris,
         innerRequest: InnerRequest,
         isNextStep: Boolean = true,
+        siderealTimeMethod: SiderealTimeMethod = SiderealTimeMethod.Williams1994,
         getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
 
         val body = eph.invoke(time.toJT(true)).spherical
         val mJDUT = time.toMJD(false)
         val siderealTime =
-            mJDUT.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position, getEquationOfEquinoxes)
+            mJDUT.getLocalApparentSiderealTime(siderealTimeMethod, position, getEquationOfEquinoxes)
         val delta = if (isNextStep) Radian.Zero else -Radian.PI2
 
         if (innerRequest == InnerRequest.UpperTransit) {
@@ -203,13 +204,14 @@ object RiseSetTransitCalculation {
         position: Observer.Position,
         eph: Ephemeris,
         innerRequest: InnerRequest,
+        siderealTimeMethod: SiderealTimeMethod = SiderealTimeMethod.Williams1994,
         getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
 
         val body = eph.invoke(time.toJT()).spherical
         val mJDUT = time.toMJD(false)
         val siderealTime =
-            mJDUT.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position, getEquationOfEquinoxes)
+            mJDUT.getLocalApparentSiderealTime(siderealTimeMethod, position, getEquationOfEquinoxes)
 
         if (innerRequest == InnerRequest.UpperTransit) {
 
@@ -268,6 +270,7 @@ object RiseSetTransitCalculation {
         observer: Observer,
         ephemeris: Ephemeris,
         request: Set<Request>,
+        siderealTimeMethod: SiderealTimeMethod = SiderealTimeMethod.Williams1994,
         getEquationOfEquinoxes: () -> Radian = {
             getEquationOfEquinoxes(time.toJT())
         }
@@ -296,6 +299,7 @@ object RiseSetTransitCalculation {
                 ephemeris,
                 event,
                 true,
+                siderealTimeMethod,
                 getEquationOfEquinoxes
             )
         }.map { (request, computed) ->
@@ -327,6 +331,7 @@ object RiseSetTransitCalculation {
         ephemeris: Ephemeris,
         innerRequest: InnerRequest,
         isStar: Boolean = false,
+        siderealTimeMethod: SiderealTimeMethod,
         getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
         val notYetCalculated = -1.0
@@ -347,10 +352,18 @@ object RiseSetTransitCalculation {
                     ephemeris,
                     innerRequest,
                     true,
+                    siderealTimeMethod,
                     getEquationOfEquinoxes
                 )
             else
-                nearestEvent(timeEvent.mJD.toInstant(false), position, ephemeris, innerRequest, getEquationOfEquinoxes)
+                nearestEvent(
+                    timeEvent.mJD.toInstant(false),
+                    position,
+                    ephemeris,
+                    innerRequest,
+                    siderealTimeMethod,
+                    getEquationOfEquinoxes
+                )
 
             val resultTime = when (result) {
                 is InnerResult.Rise.Value -> result.mjd
@@ -381,6 +394,7 @@ object RiseSetTransitCalculation {
                                     ephemeris,
                                     InnerRequest.UpperTransit,
                                     true,
+                                    siderealTimeMethod,
                                     getEquationOfEquinoxes
                                 ) as InnerResult.UpperTransit
                                 timeEvent = c.mjd.value

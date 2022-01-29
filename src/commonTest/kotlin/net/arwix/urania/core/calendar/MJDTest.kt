@@ -31,11 +31,11 @@ class MJDTest {
 
         val dateTime = LocalDateTime(2000, 1, 1, 12, 0, 0)
         val instant = dateTime.toInstant(TimeZone.UTC)
-        assertEquals(MJD.J2000, instant.toMJD())
+        assertEquals(MJD.J2000, instant.toMJD(false))
 
         val mjd = MJD(2000, 1, 1, 12)
         assertEquals(MJD.J2000, mjd)
-        assertEquals(instant.toMJD(), mjd)
+        assertEquals(instant.toMJD(false), mjd)
     }
 
     @Test
@@ -45,7 +45,7 @@ class MJDTest {
 
         assertEquals(instant.epochSeconds, instant.toMJD().toInstant().epochSeconds)
 
-        val jT = instant.toMJD().toJT()
+        val jT = instant.toMJD(false).toJT()
         assertEquals(0.22, jT.value)
     }
 

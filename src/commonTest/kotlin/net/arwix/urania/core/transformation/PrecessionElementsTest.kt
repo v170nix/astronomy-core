@@ -34,11 +34,11 @@ class PrecessionElementsTest {
         assertEquals(precession.jT, (-4.5).jT)
 
         assertContentEquals(
-            doubleArrayOf(0.9939996192421173, 0.10938337620211797, 1.8427466316683617E-4),
+            doubleArrayOf(0.9939996192421173, -0.1093835074083365, -7.248155591952142E-5),
             precession.toJ2000Matrix[0].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-0.1093835074083365, 0.9939991068022618, 0.001011920627409361),
+        assertContentEquals(doubleArrayOf(0.10938337620211797, 0.9939991068022618, -0.0010260053273318276),
             precession.toJ2000Matrix[1].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-7.248155591952142E-5, -0.0010260053273318276, 0.9999994710296063),
+        assertContentEquals(doubleArrayOf(1.8427466316683617E-4, 0.001011920627409361, 0.9999994710296063),
             precession.toJ2000Matrix[2].toArray(false), 1e-14)
     }
 
@@ -63,11 +63,11 @@ class PrecessionElementsTest {
         assertEquals(precession.jT, (-4.5).jT)
 
         assertContentEquals(
-            doubleArrayOf(0.9939996715693059, 0.10938290068899613, 1.8427417908033992E-4),
+            doubleArrayOf(0.9939996715693059, -0.1093830318949695, -7.248155591952142E-5),
             precession.toJ2000Matrix[0].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-0.1093830318949695, 0.9939991591293875, 0.001011920715563266),
+        assertContentEquals(doubleArrayOf(0.10938290068899613, 0.9939991591293875, -0.0010260053273318276),
             precession.toJ2000Matrix[1].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-7.248155591952142E-5, -0.0010260053273318276, 0.9999994710296063),
+        assertContentEquals(doubleArrayOf(1.8427417908033992E-4, 0.001011920715563266, 0.9999994710296063),
             precession.toJ2000Matrix[2].toArray(false), 1e-14)
     }
 
@@ -93,11 +93,11 @@ class PrecessionElementsTest {
         assertEquals(precession.jT, (-4.5).jT)
 
         assertContentEquals(
-            doubleArrayOf(0.9939989626791464, 0.10938934240986604, 1.8428216886738012E-4),
+            doubleArrayOf(0.9939989626791464, -0.10938947362023542, -7.24835739575672E-5),
             precession.toJ2000Matrix[0].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-0.10938947362023542, 0.9939984502457602, 0.0010119140847358503),
+        assertContentEquals(doubleArrayOf(0.10938934240986604, 0.9939984502457602, -0.0010260000799978512),
             precession.toJ2000Matrix[1].toArray(false), 1e-14)
-        assertContentEquals(doubleArrayOf(-7.24835739575672E-5, -0.0010260000799978512, 0.9999994710348438),
+        assertContentEquals(doubleArrayOf(1.8428216886738012E-4, 0.0010119140847358503, 0.9999994710348438),
             precession.toJ2000Matrix[2].toArray(false), 1e-14)
     }
 
