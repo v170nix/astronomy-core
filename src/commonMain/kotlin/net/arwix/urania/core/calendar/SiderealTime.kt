@@ -71,17 +71,11 @@ inline fun MJD.getGMSTIAU20xx(isIAU2000: Boolean): Radian {
     return gmst.rad.normalize()
 }
 
-inline fun MJD.getGreenwichApparentSiderealTime(method: SiderealTimeMethod): Radian {
-    return getGreenwichMeanSiderealTime(method) + getEquationOfEquinoxes(toJT())
-}
-
-inline fun MJD.getLocalApparentSiderealTime(method: SiderealTimeMethod, position: Observer.Position): Radian {
-    return getGreenwichApparentSiderealTime(method) + position.longitude
-}
-
 inline fun MJD.getGreenwichApparentSiderealTime(
     method: SiderealTimeMethod,
-    getEquationOfEquinoxes: () -> Radian
+    getEquationOfEquinoxes: () -> Radian = {
+        getEquationOfEquinoxes(toJT())
+    }
 ): Radian {
     return getGreenwichMeanSiderealTime(method) + getEquationOfEquinoxes()
 }
@@ -89,7 +83,9 @@ inline fun MJD.getGreenwichApparentSiderealTime(
 inline fun MJD.getLocalApparentSiderealTime(
     method: SiderealTimeMethod,
     position: Observer.Position,
-    getEquationOfEquinoxes: () -> Radian
+    getEquationOfEquinoxes: () -> Radian = {
+        getEquationOfEquinoxes(toJT())
+    }
 ): Radian {
     return getGreenwichApparentSiderealTime(method, getEquationOfEquinoxes) + position.longitude
 }

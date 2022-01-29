@@ -144,16 +144,19 @@ object RiseSetTransitCalculation {
         object None : InnerResult()
     }
 
-    private suspend fun stepRiseSetTransit(
-        time: MJD,
+    private suspend inline fun stepEvent(
+        time: Instant,
         position: Observer.Position,
         eph: Ephemeris,
         innerRequest: InnerRequest,
-        isNextStep: Boolean = true
+        isNextStep: Boolean = true,
+        getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
 
-        val body = eph.invoke(time.toJT()).spherical
-        val siderealTime = time.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
+        val body = eph.invoke(time.toJT(true)).spherical
+        val mJDUT = time.toMJD(false)
+        val siderealTime =
+            mJDUT.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position, getEquationOfEquinoxes)
         val delta = if (isNextStep) Radian.Zero else -Radian.PI2
 
         if (innerRequest == InnerRequest.UpperTransit) {
@@ -161,7 +164,7 @@ object RiseSetTransitCalculation {
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return InnerResult.UpperTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.UpperTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
 
         if (innerRequest == InnerRequest.DownTransit) {
@@ -169,7 +172,7 @@ object RiseSetTransitCalculation {
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return InnerResult.DownTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.DownTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
 
         val elevation = innerRequest.getElevation()!!
@@ -181,29 +184,32 @@ object RiseSetTransitCalculation {
             is InnerRequest.Rise -> {
                 InnerRequest.Rise.toInnerResult(cAngle) { hour ->
                     val riseTime = celestialHoursToEarthTime * ((body.phi - hour - siderealTime).normalize() + delta)
-                    time + riseTime.mJD
+                    mJDUT + riseTime.mJD
                 }
             }
             is InnerRequest.Set -> {
                 InnerRequest.Set.toInnerResult(cAngle) { hour ->
                     val setTime = celestialHoursToEarthTime * ((body.phi + hour - siderealTime).normalize() + delta)
-                    InnerResult.Set.Value(time + setTime.mJD)
-                    time + setTime.mJD
+                    InnerResult.Set.Value(mJDUT + setTime.mJD)
+                    mJDUT + setTime.mJD
                 }
             }
             else -> throw IllegalStateException()
         }
     }
 
-    private suspend fun nearestRiseSetTransit(
-        time: MJD,
+    private suspend inline fun nearestEvent(
+        time: Instant,
         position: Observer.Position,
         eph: Ephemeris,
         innerRequest: InnerRequest,
+        getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
 
         val body = eph.invoke(time.toJT()).spherical
-        val siderealTime = time.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position)
+        val mJDUT = time.toMJD(false)
+        val siderealTime =
+            mJDUT.getLocalApparentSiderealTime(SiderealTimeMethod.Williams1994, position, getEquationOfEquinoxes)
 
         if (innerRequest == InnerRequest.UpperTransit) {
 
@@ -214,7 +220,7 @@ object RiseSetTransitCalculation {
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return InnerResult.UpperTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.UpperTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
 
         if (innerRequest == InnerRequest.DownTransit) {
@@ -226,7 +232,7 @@ object RiseSetTransitCalculation {
             val transitAltitude =
                 asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
 
-            return InnerResult.DownTransit(time + dTransitTime.mJD, transitAltitude)
+            return InnerResult.DownTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
 
         val elevation = innerRequest.getElevation()!!
@@ -241,7 +247,7 @@ object RiseSetTransitCalculation {
                     val riseTime1 = celestialHoursToEarthTime * (body.phi - hour - siderealTime).normalize()
                     val riseTime2 =
                         celestialHoursToEarthTime * ((body.phi - hour - siderealTime).normalize() - Radian.PI2)
-                    time + (if (abs(riseTime2) < abs(riseTime1)) riseTime2 else riseTime1).mJD
+                    mJDUT + (if (abs(riseTime2) < abs(riseTime1)) riseTime2 else riseTime1).mJD
                 }
             }
             is InnerRequest.Set -> {
@@ -249,7 +255,7 @@ object RiseSetTransitCalculation {
                     val setTime1 = celestialHoursToEarthTime * (body.phi + hour - siderealTime).normalize()
                     val setTime2 =
                         celestialHoursToEarthTime * ((body.phi + hour - siderealTime).normalize() - Radian.PI2)
-                    time + (if (abs(setTime2) < abs(setTime1)) setTime2 else setTime1).mJD
+                    mJDUT + (if (abs(setTime2) < abs(setTime1)) setTime2 else setTime1).mJD
                 }
             }
             else -> throw IllegalStateException()
@@ -258,10 +264,13 @@ object RiseSetTransitCalculation {
     }
 
     suspend fun obtainNextResults(
-        time: MJD,
+        time: Instant,
         observer: Observer,
         ephemeris: Ephemeris,
         request: Set<Request>,
+        getEquationOfEquinoxes: () -> Radian = {
+            getEquationOfEquinoxes(time.toJT())
+        }
     ): Set<Result> {
         if (ephemeris.metadata.orbit != Orbit.Geocentric ||
             ephemeris.metadata.epoch != Epoch.Apparent ||
@@ -281,41 +290,44 @@ object RiseSetTransitCalculation {
                 }
             }
         }.map { (request, event) ->
-            request to obtainNextRiseEvents(
+            request to obtainNextEvents(
                 time,
                 observer.position,
                 ephemeris,
-                event
+                event,
+                true,
+                getEquationOfEquinoxes
             )
         }.map { (request, computed) ->
             when (computed) {
                 InnerResult.None -> Result.Error(request)
                 InnerResult.Rise.AlwaysBelowHorizon -> Result.Rise.AlwaysBelowHorizon(request)
                 InnerResult.Rise.Circumpolar -> Result.Rise.Circumpolar(request)
-                is InnerResult.Rise.Value -> Result.Rise.Value(request, computed.mjd.toInstant())
+                is InnerResult.Rise.Value -> Result.Rise.Value(request, computed.mjd.toInstant(false))
                 InnerResult.Set.AlwaysBelowHorizon -> Result.Set.AlwaysBelowHorizon(request)
                 InnerResult.Set.Circumpolar -> Result.Set.Circumpolar(request)
-                is InnerResult.Set.Value -> Result.Set.Value(request, computed.mjd.toInstant())
+                is InnerResult.Set.Value -> Result.Set.Value(request, computed.mjd.toInstant(false))
                 is InnerResult.UpperTransit -> Result.UpperTransit(
                     request,
-                    computed.mjd.toInstant(),
+                    computed.mjd.toInstant(false),
                     computed.geometricElevation.toDeg()
                 )
                 is InnerResult.DownTransit -> Result.DownTransit(
                     request,
-                    computed.mjd.toInstant(),
+                    computed.mjd.toInstant(false),
                     computed.geometricElevation.toDeg()
                 )
             }
         }.toSet()
     }
 
-    private suspend fun obtainNextRiseEvents(
-        time: MJD,
+    private suspend inline fun obtainNextEvents(
+        time: Instant,
         position: Observer.Position,
         ephemeris: Ephemeris,
         innerRequest: InnerRequest,
-        isStar: Boolean = false
+        isStar: Boolean = false,
+        getEquationOfEquinoxes: () -> Radian
     ): InnerResult {
         val notYetCalculated = -1.0
         val precisionInSeconds = 0.5
@@ -323,15 +335,22 @@ object RiseSetTransitCalculation {
         val nMax = 20
         var lastTimeEvent = notYetCalculated
         var dt = notYetCalculated
-        var timeEvent: Double = time.value
+        var timeEvent: Double = time.toMJD(false).value
         var result: InnerResult
         var triedBefore = false
         do {
             n++
             result = if (n == 1)
-                stepRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
+                stepEvent(
+                    timeEvent.mJD.toInstant(false),
+                    position,
+                    ephemeris,
+                    innerRequest,
+                    true,
+                    getEquationOfEquinoxes
+                )
             else
-                nearestRiseSetTransit(timeEvent.mJD, position, ephemeris, innerRequest)
+                nearestEvent(timeEvent.mJD.toInstant(false), position, ephemeris, innerRequest, getEquationOfEquinoxes)
 
             val resultTime = when (result) {
                 is InnerResult.Rise.Value -> result.mjd
@@ -356,11 +375,13 @@ object RiseSetTransitCalculation {
                                 break
                             } else {
                                 triedBefore = true
-                                val c = stepRiseSetTransit(
+                                val c = stepEvent(
                                     time,
                                     position,
                                     ephemeris,
-                                    InnerRequest.UpperTransit
+                                    InnerRequest.UpperTransit,
+                                    true,
+                                    getEquationOfEquinoxes
                                 ) as InnerResult.UpperTransit
                                 timeEvent = c.mjd.value
                                 dt = 2.0 * precisionInSeconds / SECONDS_PER_DAY
