@@ -27,7 +27,9 @@ class RiseSetTransitTest {
     @Test
     fun obtainCertainRiseSetTransit() {
 
-        val instant = LocalDate(2022, 1, 25).atStartOfDayIn(TimeZone.UTC)
+        var instant = LocalDate(2022, 1, 25).atStartOfDayIn(TimeZone.of("Europe/Moscow"))
+        instant = LocalDate(2022, 1, 25).atStartOfDayIn(TimeZone.UTC)
+        println(instant.toString())
         val sunEphemeris: Ephemeris = FastSunEphemeris
         val obliquity = Obliquity.Simon1994.createElements(instant.toJT())
 

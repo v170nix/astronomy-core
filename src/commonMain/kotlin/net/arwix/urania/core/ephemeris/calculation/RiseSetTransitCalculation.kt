@@ -142,6 +142,15 @@ object RiseSetTransitCalculation {
         }
 
         object None : InnerResult()
+
+
+        fun getDateTime() = when (this) {
+            is Rise.Value -> mjd
+            is Set.Value -> mjd
+            is UpperTransit -> mjd
+            is DownTransit -> mjd
+            else -> null
+        }
     }
 
     private suspend inline fun stepEvent(
@@ -340,14 +349,15 @@ object RiseSetTransitCalculation {
         val nMax = 20
         var lastTimeEvent = notYetCalculated
         var dt = notYetCalculated
-        var timeEvent: Double = time.toMJD(false).value
+        val beginTime = time.toMJD(false)
+        var timeEvent: MJD = beginTime
         var result: InnerResult
         var triedBefore = false
         do {
             n++
             result = if (n == 1)
                 stepEvent(
-                    timeEvent.mJD.toInstant(false),
+                    timeEvent.toInstant(false),
                     position,
                     ephemeris,
                     innerRequest,
@@ -357,7 +367,7 @@ object RiseSetTransitCalculation {
                 )
             else
                 nearestEvent(
-                    timeEvent.mJD.toInstant(false),
+                    timeEvent.toInstant(false),
                     position,
                     ephemeris,
                     innerRequest,
@@ -365,17 +375,26 @@ object RiseSetTransitCalculation {
                     getEquationOfEquinoxes
                 )
 
-            val resultTime = when (result) {
-                is InnerResult.Rise.Value -> result.mjd
-                is InnerResult.Set.Value -> result.mjd
-                is InnerResult.UpperTransit -> result.mjd
-                is InnerResult.DownTransit -> result.mjd
-                else -> null
+            var resultTime = result.getDateTime()
+
+            if (n == 1 && resultTime != null) {
+                if (resultTime > beginTime + 1.0.mJD) {
+                    result = stepEvent(
+                        timeEvent.toInstant(false),
+                        position,
+                        ephemeris,
+                        innerRequest,
+                        false,
+                        siderealTimeMethod,
+                        getEquationOfEquinoxes
+                    )
+                    resultTime = result.getDateTime()
+                }
             }
 
             if (resultTime != null) {
-                timeEvent = resultTime.value
-                dt = timeEvent - lastTimeEvent
+                timeEvent = resultTime
+                dt = timeEvent.value - lastTimeEvent
             } else {
                 @Suppress("NON_EXHAUSTIVE_WHEN_STATEMENT")
                 when (result) {
@@ -397,14 +416,14 @@ object RiseSetTransitCalculation {
                                     siderealTimeMethod,
                                     getEquationOfEquinoxes
                                 ) as InnerResult.UpperTransit
-                                timeEvent = c.mjd.value
+                                timeEvent = c.mjd
                                 dt = 2.0 * precisionInSeconds / SECONDS_PER_DAY
                             }
                         } else break
                     }
                 }
             }
-            lastTimeEvent = timeEvent
+            lastTimeEvent = timeEvent.value
         } while (abs(dt) > precisionInSeconds / SECONDS_PER_DAY && n < nMax)
 
         return if (n == nMax) {
