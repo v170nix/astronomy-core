@@ -171,7 +171,7 @@ object RiseSetTransitCalculation {
         if (innerRequest == InnerRequest.DownTransit) {
             val dTransitTime = celestialHoursToEarthTime * ((body.phi - siderealTime).normalize() + Radian.PI + delta)
             val transitAltitude =
-                asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
+                asin(sin(body.theta) * sin(position.latitude) - cos(body.theta) * cos(position.latitude)).rad
 
             return InnerResult.DownTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
@@ -232,7 +232,7 @@ object RiseSetTransitCalculation {
             val dTransitTime = if (abs(dTransitTime2) < abs(dTransitTime1)) dTransitTime2 else dTransitTime1
 
             val transitAltitude =
-                asin(sin(body.theta) * sin(position.latitude) + cos(body.theta) * cos(position.latitude)).rad
+                asin(sin(body.theta) * sin(position.latitude) - cos(body.theta) * cos(position.latitude)).rad
 
             return InnerResult.DownTransit(mJDUT + dTransitTime.mJD, transitAltitude)
         }
