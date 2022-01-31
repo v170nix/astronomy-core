@@ -57,7 +57,8 @@ class RiseSetTransitTest {
             val riseSetTransitCalculation = RiseSetTransitCalculation
 
             val obtainResult: Set<RiseSetTransitCalculation.Result> = riseSetTransitCalculation.obtainNextResults(
-                instant, observer,
+                instant,
+                observer = observer,
                 ephemeris = aSunEphemeris,
                 request = setOf(
 //                    RiseSetTransitCalculation.Request.RiseSet.HorizonAstronomical34arcMin((15 / 60.0).deg.toRad()),
@@ -134,7 +135,8 @@ class RiseSetTransitTest {
             val riseSetTransitCalculation = RiseSetTransitCalculation
 
             val obtainResult: Set<RiseSetTransitCalculation.Result> = riseSetTransitCalculation.obtainNextResults(
-                instant, observer,
+                instant,
+                observer = observer,
                 ephemeris = aSunEphemeris,
                 request = setOf(
                     RiseSetTransitCalculation.Request.RiseSet.HorizonAstronomical((15 / 60.0).deg.toRad() , Radian.Zero),

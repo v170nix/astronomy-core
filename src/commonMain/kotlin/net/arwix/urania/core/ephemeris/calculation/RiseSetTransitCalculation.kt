@@ -276,6 +276,7 @@ object RiseSetTransitCalculation {
 
     suspend fun obtainNextResults(
         time: Instant,
+        maxDurationInSeconds: Long = 60L * 60L * 24L,
         observer: Observer,
         ephemeris: Ephemeris,
         request: Set<Request>,
@@ -304,6 +305,7 @@ object RiseSetTransitCalculation {
         }.map { (request, event) ->
             request to obtainNextEvents(
                 time,
+                maxDurationInSeconds,
                 observer.position,
                 ephemeris,
                 event,
@@ -336,6 +338,7 @@ object RiseSetTransitCalculation {
 
     private suspend inline fun obtainNextEvents(
         time: Instant,
+        maxDurationInSeconds: Long,
         position: Observer.Position,
         ephemeris: Ephemeris,
         innerRequest: InnerRequest,
@@ -350,6 +353,7 @@ object RiseSetTransitCalculation {
         var lastTimeEvent = notYetCalculated
         var dt = notYetCalculated
         val beginTime = time.toMJD(false)
+        val maxTime = beginTime + (maxDurationInSeconds / 60.0 / 60.0 / 24.0).mJD
         var timeEvent: MJD = beginTime
         var result: InnerResult
         var triedBefore = false
@@ -378,7 +382,7 @@ object RiseSetTransitCalculation {
             var resultTime = result.getDateTime()
 
             if (n == 1 && resultTime != null) {
-                if (resultTime > beginTime + 1.0.mJD) {
+                if (resultTime > maxTime) {
                     result = stepEvent(
                         timeEvent.toInstant(false),
                         position,
@@ -429,6 +433,8 @@ object RiseSetTransitCalculation {
         return if (n == nMax) {
             InnerResult.None
         } else {
+            val resultTime = result.getDateTime() ?: return result
+            if (resultTime < beginTime || resultTime >= maxTime) return InnerResult.None
             result
         }
     }
