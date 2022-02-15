@@ -19,6 +19,7 @@ value class JT(val value: Double): Comparable<JT> {
 
     companion object {
         val J2000 = JT(0.0)
+        val None = JT(Double.NaN)
     }
 }
 
