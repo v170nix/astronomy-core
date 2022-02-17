@@ -63,6 +63,21 @@ class PhysicAnglesTest {
         assertEquals(0.9976066, jupiterAngles.phase, 1e-6)
         assertEquals(PhysicAngles.Relative.Trails, jupiterAngles.relative)
 
+        val moonEphemeris : MoshierEphemeris = MoshierEphemerisFactory(instant.toJT()).createGeocentricEphemeris(
+            bodyEphemeris = MoshierMoonEphemeris,
+            epoch = Epoch.Apparent,
+            plane = Plane.Ecliptic
+        )
+
+        val moonVector = moonEphemeris.invoke(instant.toJT())
+
+        val moonAngles = PhysicAngles.getAngles(sunVector, moonVector)
+
+        assertEquals(30.5190, moonAngles.elongation.toDeg().value, 1e-3)
+        assertEquals(149.4049, moonAngles.phaseAngle.toDeg().value, 1e-3)
+        assertEquals(0.069586, moonAngles.phase, 1e-4)
+        assertEquals(PhysicAngles.Relative.Leads, moonAngles.relative)
+
     }
 
 }
