@@ -48,6 +48,7 @@ inline operator fun Double.div(radian: Radian): Double  = this / radian.value
 
 inline fun cos(radian: Radian): Double = kotlin.math.cos(radian.value)
 inline fun sin(radian: Radian): Double = kotlin.math.sin(radian.value)
+inline fun tan(radian: Radian): Double = kotlin.math.tan(radian.value)
 
 inline val Double.rad: Radian get() = Radian(this)
 inline val Int.rad: Radian get() = Radian(this.toDouble())
