@@ -7,6 +7,7 @@ import net.arwix.urania.core.physic.Physic
 import net.arwix.urania.core.physic.PhysicEphemeris
 import net.arwix.urania.core.toRad
 import kotlin.math.log10
+import kotlin.math.pow
 
 internal object PhysicModelJupiterImpl : Physic.Elements {
 
@@ -19,7 +20,7 @@ internal object PhysicModelJupiterImpl : Physic.Elements {
             Physic.Model.IAU2006,
             Physic.Model.IAU2009,
             Physic.Model.IAU2015,
-            Physic.Model.IAU2018-> {
+            Physic.Model.IAU2018 -> {
                 val a = (99.360714 + 4850.4046 * jT).deg.toRad()
                 val b = (175.895369 + 1191.9605 * jT).deg.toRad()
                 val c = (300.323162 + 262.5475 * jT).deg.toRad()
@@ -44,7 +45,20 @@ internal object PhysicModelJupiterImpl : Physic.Elements {
     }
 
     override fun Physic.Model.getMagnitude(distance: Double, distanceFromSun: Double, phaseAngle: Degree): Double {
-        return -9.25 + 5.0 * log10(distance * distanceFromSun) + 0.005 * phaseAngle
+        return if (this == Physic.Model.IAU2018 && phaseAngle <= 130.0.deg) {
+            val factor = if (phaseAngle < 12.0.deg) {
+                -3.7E-04 * phaseAngle + 6.16E-04 * phaseAngle * phaseAngle
+            } else {
+                val f = phaseAngle / 180.0
+                -2.5 * log10(
+                    1.0 - 1.507 * f - 0.363 *
+                            f.value.pow(2.0) - 0.062 * f.value.pow(3.0) +
+                            2.809 * f.value.pow(4.0) - 1.876 * f.value.pow(5.0)
+                )
+            }
+            5.0 * log10(distance * distanceFromSun) + if (phaseAngle < 12.0.deg) -9.395 + factor else -9.428 + factor
+        }
+        else -9.25 + 5.0 * log10(distance * distanceFromSun) + 0.005 * phaseAngle
     }
 
     /**
@@ -56,7 +70,7 @@ internal object PhysicModelJupiterImpl : Physic.Elements {
             Physic.Model.IAU2006 -> 870.536642
             Physic.Model.IAU2009,
             Physic.Model.IAU2015,
-            Physic.Model.IAU2018-> 870.536
+            Physic.Model.IAU2018 -> 870.536
         }
     }
 
@@ -69,7 +83,7 @@ internal object PhysicModelJupiterImpl : Physic.Elements {
             Physic.Model.IAU2006,
             Physic.Model.IAU2009,
             Physic.Model.IAU2015,
-            Physic.Model.IAU2018-> 284.95.deg
+            Physic.Model.IAU2018 -> 284.95.deg
         }
     }
 }

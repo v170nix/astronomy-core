@@ -39,6 +39,7 @@ internal object PhysicModelMarsImpl : Physic.Elements {
     }
 
     override fun Physic.Model.getMagnitude(distance: Double, distanceFromSun: Double, phaseAngle: Degree): Double {
+        // TODO IAU2018
         return -1.52 + 5.0 * log10(distance * distanceFromSun) + 0.016 * phaseAngle
     }
 

@@ -13,12 +13,10 @@ import net.arwix.urania.core.math.LIGHT_TIME_DAYS_PER_AU
 import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.vector.SphericalVector
 import net.arwix.urania.core.math.vector.Vector
-
 import net.arwix.urania.core.spherical
 import net.arwix.urania.core.toDeg
 import net.arwix.urania.core.toRad
 import net.arwix.urania.core.transformation.findNearestObliquityModel
-import net.arwix.urania.core.transformation.obliquity.Obliquity
 import net.arwix.urania.core.transformation.obliquity.ObliquityElements
 import net.arwix.urania.core.transformation.obliquity.createElements
 import net.arwix.urania.core.transformation.precession.Precession
@@ -36,20 +34,49 @@ import kotlin.math.*
  * assumed circular disk diameter NOT illuminated by the Sun.
  */
 data class PhysicEphemeris(
+    // S-O-T /r
     val elongation: Radian,
+    // S-T-O
     val relative: Relative,
     val phaseAngle: Radian,
     val phase: Double,
     val distance: Double,
     val distanceFromSun: Double,
+
+    /**
+     * The equatorial angular width of the target body full disk, if it were fully
+     * illuminated and visible to the observer.
+     */
     val angularDiameter: Radian,
+
+    /**
+     * The maximum angular width of the target body's
+     * assumed circular disk diameter NOT illuminated by the Sun.
+     */
     val defectOfIllumination: Radian,
     val magnitude: Double,
     val northPole: NorthPole,
 
     /**
      * Apparent planetodetic latitude of the center of the target
-     * disc seen by the OBSERVER. This is NOT exactly the same as the
+     * disc seen by the OBSERVER. (ObsSub-LON) This is NOT exactly the same as the
+     * "nearest" sub-point for a non-spherical target shape (since the center of
+     * the disc might not be the point closest to the observer), but is generally
+     * very close if not a very irregular body shape. Down-leg light travel-time
+     * from target to observer is taken into account.
+     * The reference ellipsoid is an oblate
+     * spheroid with a single flatness coefficient in which the y-axis body radius
+     * is taken to be the same value as the x-axis radius. Positive longitude is to
+     * the WEST for this target. Cartographic system is given in the header.
+     */
+    val longitudeOfCentralMeridian: Radian,
+    val longitudeOfCentralMeridianSystemI: Radian?,
+    val longitudeOfCentralMeridianSystemII: Radian?,
+    val longitudeOfCentralMeridianSystemIII: Radian?,
+
+    /**
+     * Apparent planetodetic latitude of the center of the target
+     * disc seen by the OBSERVER. (ObsSub-LAT) This is NOT exactly the same as the
      * "nearest" sub-point for a non-spherical target shape (since the center of
      * the disc might not be the point closest to the observer), but is generally
      * very close if not a very irregular body shape. Down-leg light travel-time
@@ -57,10 +84,32 @@ data class PhysicEphemeris(
      * the equatorial plane and the line perpendicular to the reference ellipsoid of
      * the body, so includes body oblateness. The reference ellipsoid is an oblate
      * spheroid with a single flatness coefficient in which the y-axis body radius
-     * is taken to be the same value as the x-axis radius. Positive longitude is to
-     * the WEST for this target. Cartographic system is given in the header.
+     * is taken to be the same value as the x-axis radius.
      */
     val positionAngleOfPole: Radian,
+
+    val positionAngleOfAxis: Radian,
+
+    /**
+     * Apparent sub-solar longitude and latitude of the Sun on the target. The
+     * apparent planetodetic longitude and latitude of the center of the target disc
+     * as seen from the Sun, as seen by the observer at print-time. This is NOT
+     * exactly the same as the "sub-solar" (nearest) point for a non-spherical target
+     * shape (since the center of the disc seen from the Sun might not be the closest
+     * point to the Sun), but is very close if not a highly irregular body shape.
+     * Light travel-time from Sun to target and from target to observer is taken into
+     * account.  Latitude is the angle between the equatorial plane and the line
+     * perpendicular to the reference ellipsoid of the body. The reference ellipsoid
+     * is an oblate spheroid with a single flatness coefficient in which the y-axis
+     * body radius is taken to be the same value as the x-axis radius.  Positive
+     * longitude is to the WEST for this target. Cartographic system is given in the
+     * header.
+     */
+    val subsolarLatitude: Radian?,
+    val subsolarLongitude: Radian?,
+    val brightLimbAngle: Radian?,
+
+
     /**
      * longitude of planet at J2000
      */
@@ -82,6 +131,9 @@ data class PhysicEphemeris(
 
     companion object {
 
+        // https://wgc.jpl.nasa.gov:8443/webgeocalc/#SubObserverPoint
+        // https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/Tutorials/pdf/individual_docs/17_frames_and_coordinate_systems.pdf
+        // IAU_MARS
         fun createElements(
             model: Physic.Model,
             @Apparent @Geocentric @Ecliptic sunVector: Vector, // observer-sun vector
@@ -112,8 +164,8 @@ data class PhysicEphemeris(
                 model.getMagnitude(ro, if (body == Physic.Body.Sun) 1.0 else rp, phaseAngle.toDeg())
             }
 
-            // - JT(ro * LIGHT_TIME_DAYS_PER_AU / 36525.0)
-            val northPole = with(body) { model.getNorthPole(jT) }
+            val lightTime = ro * LIGHT_TIME_DAYS_PER_AU
+            val northPole = with(body) { model.getNorthPole(jT - JT(lightTime / 36525.0)) }
 
             val currentNorthPoleVector = precessionElements.changeEpoch(
                 SphericalVector(northPole.rightAscension, northPole.declination, ro),
@@ -121,51 +173,14 @@ data class PhysicEphemeris(
             ).spherical
 
             val locEq = obliquityElements.rotatePlane(target, Plane.Equatorial).spherical
-            val locNP = SphericalVector(phi = currentNorthPoleVector.phi, theta = currentNorthPoleVector.theta, 1.0)
+            val locNP =
+                SphericalVector(phi = currentNorthPoleVector.phi, theta = currentNorthPoleVector.theta, 1.0).spherical
             val locEqSun = obliquityElements.rotatePlane(sunVector, Plane.Equatorial).spherical
 
             val positionAngleOfPole = planetocentricToPlanetogeodeticLatitude(
                 body,
                 dotProduct(currentNorthPoleVector.phi, currentNorthPoleVector.theta, locEq.phi, locEq.theta)
             )
-            println("!positionAngleOfPole центральная точка f(e) ObsSub-LAT ${positionAngleOfPole.toDeg()} ")
-
-            if (body != Physic.Body.Sun) {
-                var fromSun = (target - sunVector).spherical
-                val fromSunEq = obliquityElements.rotatePlane(fromSun, Plane.Equatorial).spherical
-                val subsolarLatitude = dotProduct(currentNorthPoleVector.phi, currentNorthPoleVector.theta, fromSunEq.phi, fromSunEq.theta)
-                println("!subsolarLatitude подсолнечная точка f(s) SunSub-LAT ${subsolarLatitude.toDeg()} ")
-                val subsolarLatitude1 = planetocentricToPlanetogeodeticLatitude(body, subsolarLatitude)
-                println("!subsolarLatitude1 подсолнечная точка f(s) SunSub-LAT ${subsolarLatitude1.toDeg()} ")
-
-                fromSun = (locEq - locEqSun).spherical
-                val ra = fromSun.phi
-                val dec = fromSun.theta
-                val D = cos(dec) * sin(locNP.phi - ra)
-                var N = sin(locNP.theta) * cos(dec) * cos(locNP.phi - ra)
-                N -= cos(locNP.theta) * sin(dec)
-
-                var delta_lon = 0.0
-                if (D != 0.0) delta_lon = atan(N / D).rad.toDeg().value
-                if (D < 0.0) delta_lon += 180.0
-                with(body) {
-
-                    var subsolarLongitude =
-                        (model.getSpeedRotation() * (jT * 36525.0)).deg - delta_lon.deg + model.getLongitudeJ2000(jT)
-                    if (model.getSpeedRotation() < 0) subsolarLongitude = 360.deg - subsolarLongitude
-                    println("!subsolarLongitude подсолнечная точка L(s) SunSub-LON ${subsolarLongitude.normalize()}")
-                }
-
-                val brightLimbAngle = (PI + atan2(
-                    cos(locEqSun.theta) *
-                            sin(currentNorthPoleVector.phi - locEqSun.phi), cos(locEqSun.theta) *
-                            sin(currentNorthPoleVector.theta) * cos(currentNorthPoleVector.phi - locEqSun.phi) -
-                            sin(locEqSun.theta) * cos(currentNorthPoleVector.theta)
-                ))
-
-                println("!brightLimbAngle ${brightLimbAngle.rad.toDeg()}")
-
-            }
 
             val positionAngleOfAxis = (PI +
                     atan2(
@@ -175,35 +190,41 @@ data class PhysicEphemeris(
                                 sin(northPole.declination) * cos(locEq.theta)
                     )).rad
 
-            println("!positionAngleOfAxis позиционный угол оси ${positionAngleOfAxis.toDeg()} ")
-
-//            val ephem = precessPoleFromJ2000(jT, precessionElements, body, model, target.normalize()).spherical
-
-
-            val D = cos(locEq.theta) * sin(locNP.phi - locEq.phi)
-            var N = sin(locNP.theta) * cos(locEq.theta) * cos(locNP.phi - locEq.phi)
-            N -= cos(locNP.theta) * sin(locEq.theta)
-
-            val delta_lon = atan2(N, D).rad.toDeg()
-
-            val lightTime = (target.normalize() * LIGHT_TIME_DAYS_PER_AU)
-
+            var longitudeOfCentralMeridian: Radian
+            var longitudeOfCentralMeridianSystemI: Radian? = null
+            var longitudeOfCentralMeridianSystemII: Radian? = null
+            var longitudeOfCentralMeridianSystemIII: Radian? = null
+            var subsolarLongitude: Radian? = null
+            var subsolarLatitude: Radian? = null
+            var brightLimbAngle: Radian? = null
             with(body) {
 
-                val d = jT.toMJD() - MJD.J2000 - lightTime.mJD // lightTime.mJD
-                val W = (model.getLongitudeJ2000(jT) + (model.getSpeedRotation() * d).deg).toRad()
-                var meridian = W.toDeg() - delta_lon
+                val D = cos(locEq.theta) * sin(locNP.phi - locEq.phi)
+                val N = sin(locNP.theta) * cos(locEq.theta) * cos(locNP.phi - locEq.phi) -
+                        cos(locNP.theta) * sin(locEq.theta)
+
+                val deltaLongitude = atan2(N, D).rad.toDeg()
+
+                val d = jT.toMJD() - MJD.J2000 - lightTime.mJD
+                val meridian0 = (model.getSpeedRotation() * d).deg - deltaLongitude
+                var meridian = meridian0 + model.getLongitudeJ2000(jT)
 
                 if (model.getSpeedRotation() < 0.0) meridian = 360.deg - meridian
                 meridian = meridian.normalize()
 
-                var longitudeOfCentralMeridian = meridian.toRad()
+                longitudeOfCentralMeridian = meridian.toRad()
                 when (body) {
                     Physic.Body.Jupiter -> {
-
+                        longitudeOfCentralMeridianSystemI =
+                            (-(-67.1 + deltaLongitude - (meridian0 + deltaLongitude) * 877.9 / model.getSpeedRotation())).deg.toRad()
+                        longitudeOfCentralMeridianSystemII =
+                            (-(-43.3 + deltaLongitude - (meridian0 + deltaLongitude) * 870.27 / model.getSpeedRotation())).deg.toRad()
+                        longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridian
                     }
                     Physic.Body.Saturn -> {
-
+                        longitudeOfCentralMeridianSystemI =
+                            (-(-227.2037 + deltaLongitude - (meridian0 + deltaLongitude) * 844.3 / model.getSpeedRotation())).deg.toRad()
+                        longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridian
                     }
                     Physic.Body.Sun,
                     Physic.Body.Moon,
@@ -212,23 +233,59 @@ data class PhysicEphemeris(
                         longitudeOfCentralMeridian = Radian.PI2 - longitudeOfCentralMeridian
                     }
                     Physic.Body.Uranus -> {
-
+                        longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridian
                     }
                     Physic.Body.Neptune -> {
+                        longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridian
+                    }
+                    else -> {}
+                }
+            }
 
+
+            if (body != Physic.Body.Sun) {
+                var fromSun = (target - sunVector).spherical
+                val fromSunEq = obliquityElements.rotatePlane(fromSun, Plane.Equatorial).spherical
+                subsolarLatitude = planetocentricToPlanetogeodeticLatitude(
+                    body,
+                    dotProduct(currentNorthPoleVector.phi, currentNorthPoleVector.theta, fromSunEq.phi, fromSunEq.theta)
+                )
+
+                fromSun = (locEq - locEqSun).spherical
+                val ra = fromSun.phi
+                val dec = fromSun.theta
+                val D = cos(dec) * sin(locNP.phi - ra)
+                var N = sin(locNP.theta) * cos(dec) * cos(locNP.phi - ra)
+                N -= cos(locNP.theta) * sin(dec)
+
+                var deltaLongitude = 0.0
+                if (D != 0.0) deltaLongitude = atan(N / D).rad.toDeg().value
+                if (D < 0.0) deltaLongitude += 180.0
+                with(body) {
+                    subsolarLongitude =
+                        ((model.getSpeedRotation() * (jT * 36525.0 - lightTime)).deg - deltaLongitude.deg + model.getLongitudeJ2000(
+                            jT
+                        )).toRad()
+                    if (model.getSpeedRotation() < 0) subsolarLongitude = Radian.PI2 - subsolarLongitude!!
+                    subsolarLongitude = subsolarLongitude?.normalize()
+                }
+
+                when (body) {
+                    Physic.Body.Moon,
+                    Physic.Body.Earth -> {
+                        // This inversion is due to historical reasons
+                        subsolarLongitude = -subsolarLongitude!!
                     }
                     else -> {}
                 }
 
-                println("!longitudeOfCentralMeridian центральная точка L(e) ObsSub-LON ${longitudeOfCentralMeridian.toDeg()}")
+                brightLimbAngle = (PI + atan2(
+                    cos(locEqSun.theta) *
+                            sin(currentNorthPoleVector.phi - locEqSun.phi), cos(locEqSun.theta) *
+                            sin(currentNorthPoleVector.theta) * cos(currentNorthPoleVector.phi - locEqSun.phi) -
+                            sin(locEqSun.theta) * cos(currentNorthPoleVector.theta)
+                )).rad
             }
-
-
-            calsAxisJpForSun(model, jT, sunVector, target.spherical, body)
-
-
-
-            println(northPole)
 
             return PhysicEphemeris(
                 elongation = elongation,
@@ -241,12 +298,18 @@ data class PhysicEphemeris(
                 defectOfIllumination = angularRadius * 2.0 * (1.0 - phase),
                 magnitude = magnitude,
                 northPole = northPole,
+                longitudeOfCentralMeridian = longitudeOfCentralMeridian,
+                longitudeOfCentralMeridianSystemI = longitudeOfCentralMeridianSystemI?.normalize(),
+                longitudeOfCentralMeridianSystemII = longitudeOfCentralMeridianSystemII?.normalize(),
+                longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridianSystemIII?.normalize(),
                 positionAngleOfPole = positionAngleOfPole,
+                positionAngleOfAxis = positionAngleOfAxis,
+                subsolarLongitude = subsolarLongitude,
+                subsolarLatitude = subsolarLatitude,
                 longitudeJ2000 = with(body) { model.getLongitudeJ2000(jT) },
-                speedRotation = with(body) { model.getSpeedRotation() }
-            ).also {
-                println("ephemeris $it")
-            }
+                speedRotation = with(body) { model.getSpeedRotation() },
+                brightLimbAngle = brightLimbAngle
+            )
         }
 
         fun createElements(
@@ -268,219 +331,7 @@ data class PhysicEphemeris(
     }
 }
 
-// https://wgc.jpl.nasa.gov:8443/webgeocalc/#SubObserverPoint
-// https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/Tutorials/pdf/individual_docs/17_frames_and_coordinate_systems.pdf
-// IAU_MARS
-
-private fun calsAxisJpForSun(
-    model: Physic.Model,
-    jT: JT,
-    sun: Vector,
-    target: SphericalVector,
-    body: Physic.Body
-
-) {
-    val obliquity = Obliquity.Williams1994.createElements(jT)
-
-    val precessionEq = Precession.IAU2000.createElements(jT)
-
-    val northPole = with(body) { model.getNorthPole(jT) }
-
-    val ephem = precessPoleFromJ2000(precessionEq, northPole, body, target.normalize()).spherical // true
-    val locEq = obliquity.rotatePlane(
-        target,
-        Plane.Equatorial
-    ).spherical // obliquity.rotatePlane(ephem, Plane.Equatorial).spherical
-    val locNP = SphericalVector(phi = ephem.phi, theta = ephem.theta, 1.0)
-    val locEqSun = obliquity.rotatePlane(sun, Plane.Equatorial).spherical
-
-//    val targetEq = obliquity.rotatePlane(target, Plane.Equatorial).spherical // true
-    val lightTime = (target.normalize() * LIGHT_TIME_DAYS_PER_AU)
-
-    if (body !is Physic.Body.Sun) {
-        var fromSun = (target - sun).spherical
-        val fromSunEq = obliquity.rotatePlane(fromSun, Plane.Equatorial).spherical
-        val subsolarLatitude = dotProduct(ephem.phi, ephem.theta, fromSunEq.phi, fromSunEq.theta)
-        println("subsolarLatitude ${subsolarLatitude.toDeg()} ")
-        val subsolarLatitude1 = planetocentricToPlanetogeodeticLatitude(body, subsolarLatitude)
-        println("subsolarLatitude1 ${subsolarLatitude1.toDeg()} ")
-
-        fromSun = (locEq - locEqSun).spherical
-        val ra = fromSun.phi
-        val dec = fromSun.theta
-        val D = cos(dec) * sin(locNP.phi - ra)
-        var N = sin(locNP.theta) * cos(dec) * cos(locNP.phi - ra)
-        N -= cos(locNP.theta) * sin(dec)
-
-        var delta_lon = 0.0
-        if (D != 0.0) atan(N / D).rad.toDeg().value
-        if (D < 0.0) delta_lon += 180.0
-        with(body) {
-
-            var subsolarLongitude =
-                (model.getSpeedRotation() * (jT * 36525.0)).deg - delta_lon.deg + model.getLongitudeJ2000(jT)
-            if (model.getSpeedRotation() < 0) subsolarLongitude = 360.deg - subsolarLongitude
-            println("subsolarLongitude ${subsolarLongitude.normalize()}")
-        }
-
-        val brightLimbAngle = (PI + atan2(
-            cos(locEqSun.theta) *
-                    sin(ephem.phi - locEqSun.phi), cos(locEqSun.theta) *
-                    sin(ephem.theta) * cos(ephem.phi - locEqSun.phi) -
-                    sin(locEqSun.theta) * cos(ephem.theta)
-        ))
-
-        println("brightLimbAngle ${brightLimbAngle.rad.toDeg()}")
-
-
-    }
-
-    // Obtain position angle of pole as seen from Earth
-    val positionAngleOfPole = dotProduct(ephem.phi, ephem.theta, locEq.phi, locEq.theta)
-    println("positionAngleOfPole ${positionAngleOfPole.toDeg()} ")
-
-    // Correct value (planetocentric to planeto-geodetic latitude)
-    val positionAngleOfPole1 = planetocentricToPlanetogeodeticLatitude(body, positionAngleOfPole)
-    println("positionAngleOfPole1 ${positionAngleOfPole1.toDeg()} ")
-
-    val D = cos(locEq.theta) * sin(locNP.phi - locEq.phi);
-    var N = sin(locNP.theta) * cos(locEq.theta) *
-            cos(locNP.phi - locEq.phi)
-    N -= cos(locNP.theta) * sin(locEq.theta)
-
-    val delta_lon = atan2(N, D).rad.toDeg()
-
-    with(body) {
-
-        val d = jT.toMJD() - MJD.J2000 - lightTime.mJD // lightTime.mJD
-        val W = (model.getLongitudeJ2000(jT) + (model.getSpeedRotation() * d).deg).toRad()
-
-        var meridian = W.toDeg() - delta_lon
-        if (model.getSpeedRotation() < 0.0) meridian = 360.deg - meridian
-        meridian = meridian.normalize()
-        val longitudeOfCentralMeridian = meridian.toRad()
-
-        println("longitudeOfCentralMeridian ${longitudeOfCentralMeridian.toDeg()}")
-        // for sun
-        val sunLongitudeOfCentralMeridian = Radian.PI2 - longitudeOfCentralMeridian
-        println("sunLongitudeOfCentralMeridian ${sunLongitudeOfCentralMeridian.toDeg()}")
-        println("====================================================================")
-    }
-}
-
-private fun precessPoleFromJ2000(
-
-    precession: PrecessionElements,
-    northPole: PhysicEphemeris.NorthPole,
-    body: Physic.Body,
-    distance: Double
-): Vector {
-    val locationElement = with(body) {
-        SphericalVector(
-            phi = northPole.rightAscension,
-            theta = northPole.declination,
-            r = distance
-        )
-    }
-    return precession.changeEpoch(locationElement, Epoch.Apparent)
-}
-
 // https://github.com/v170nix/astronomy-java-lib/blob/101c17e62da127a9ee8d5adc5c30e7a4d0737193/src/main/java/net/arwix/astronomy/physic/PhysicOrientation.java
-//private fun calcAxis(jT: JT,
-//                     sun: Vector,
-//                     target: Vector,
-//                     model: Physic.PhysicModel,
-//                     rotationElements: PhysicElements,
-//                     body: Physic.Body
-//) {
-//
-//    var n = 0.0
-//    var d = 0.0
-//    var deltaLon = 0.0
-//
-//    val precession = Precession.DE4xxx.createElements(jT)
-//    val obliquity = Obliquity.Williams1994.createElements(jT)
-//
-//
-//    val targetEq = obliquity.rotatePlane(target, Plane.Equatorial)
-//    val sunEq = obliquity.rotatePlane(sun, Plane.Equatorial)
-//    val deltaR = (- targetEq)
-//
-//    val lightTime =  (deltaR.spherical.r * LIGHT_TIME_DAYS_PER_AU / 36525.0).jT
-//    val lt0 = (12.19873734 / 60.0 / 24.0  / 36525.0).jT
-//
-////    val elements = body.createRotationElements(Physic.PhysicModel.IAU2015, jT)
-//
-//    val eqPrecession = Precession.IAU2000.createElements(jT - lt0)
-//
-//    val ephem = precessPoleFromJ2000(jT, eqPrecession, rotationElements, target.normalize()).spherical
-//
-//    d = (jT - lt0) * 36525.0
-//
-//    val W = (model.getLongitudeJ2000(jT) + (model.getSpeedRotation() * d).deg).toRad()
-//    val orientation = Matrix(Matrix.AXIS_Z, W) *
-//            Matrix(Matrix.AXIS_X, Radian.PI / 2.0 - ephem.theta) *
-//            Matrix(Matrix.AXIS_Z, Radian.PI / 2.0 + ephem.phi)
-//
-//    val orientation1 = eqPrecession.toJ2000Matrix * rotationElements.createRotationMatrix(jT - lt0)
-//    val e =  orientation1
-//    val s1 = (e * deltaR).spherical
-//    val long = Radian.PI2 - s1.phi
-//
-//    println("paOfPole ${long.toDeg()}")
-//
-//    val planetocentricLatitude = s1.theta
-//
-//    println("position Angle Of Pole ${s1.theta.toDeg()}")
-//
-//    val positionAngleOfPol = planetocentricToPlanetogeodeticLatitude(body, planetocentricLatitude)
-//
-//    println("position Angle Of Pole ${positionAngleOfPol.toDeg()}")
-//
-//
-//    val locationElement = SphericalVector(
-//        phi = rotationElements.northPole.rightAscension,
-//        theta = rotationElements.northPole.declination,
-//        r = target.normalize()
-//    )
-//
-//    println("cNorthPole ${locationElement.phi.toDeg()}")
-//
-//    val currentNorthPole = Precession.DE4xxx.createElements(jT).changeEpoch(locationElement, Epoch.Apparent).spherical
-//
-//    println("currentNorthPole ${currentNorthPole.phi.toDeg()}")
-//
-//    val locNP = SphericalVector(phi = currentNorthPole.phi, theta = currentNorthPole.theta, 1.0)
-//
-//    val locEq = obliquity.rotatePlane(currentNorthPole, Plane.Equatorial).spherical
-//    println("currentLocEq ${locEq.phi.toDeg()}")
-//
-//    val locEqSun = obliquity.rotatePlane(sun, Plane.Equatorial)
-//
-//    val targetEqu = obliquity.rotatePlane(target, Plane.Equatorial).spherical
-//
-//    val e1 = targetEqu / targetEqu.r
-//    var e2 =  SphericalVector(Radian.Zero, Radian.Zero, 1.0) * targetEqu
-//    e2 = e2 / e2.normalize()
-//    val e3 = e1 * e2
-//    val c = currentNorthPole dot e3
-//    val s = currentNorthPole dot e2
-//    val phi = atan2(c, s)
-//    println("phi ${phi.rad.toDeg()}")
-//
-//    val paOfPole = dotProduct(currentNorthPole.phi, currentNorthPole.theta, targetEqu.phi, targetEqu.theta)
-//
-//    println("paOfPole!!! ${paOfPole.toDeg()}")
-//
-//    val positionAngleOfPole = planetocentricToPlanetogeodeticLatitude(body, paOfPole)
-//
-////    val positionAngleOfAxis = (Radian.PI + atan2(cos(locNP)))
-//
-//    println("position Angle Of Pole ${positionAngleOfPole.toDeg()}")
-//
-//
-//}
-
 
 /**
  * Transforms a given latitude from planetocentric to planetogeodetic.
@@ -488,14 +339,9 @@ private fun precessPoleFromJ2000(
  * @param target Target body.
  * @return Planetogeodetic latitude.
  */
-fun planetocentricToPlanetogeodeticLatitude(body: Physic.Body, lat: Radian): Radian {
+private fun planetocentricToPlanetogeodeticLatitude(body: Physic.Body, lat: Radian): Radian {
     val shape = 1.0 / body.ellipsoid.inverseFlatteningFactor
     if (shape == 1.0) return lat
-    println("lat ${tan(lat.value)}")
-    println("shape ${((1.0 - shape).pow(2.0))}")
-
-
-
     return atan(tan(lat.value) / ((1.0 - shape).pow(2.0))).rad
 }
 
@@ -524,79 +370,3 @@ private fun dotProduct(poleRA: Radian, poleDec: Radian, pRA: Radian, pDec: Radia
 
     return -asin(dot).rad
 }
-
-//private fun calsAxisJpForSunVersion1(
-//    jT: JT,
-//    sun: Vector,
-//    target: Vector,
-//    rotationElements: PhysicElements,
-//    body: Physic.Body
-//
-//) {
-//    val precession = Precession.DE4xxx.createElements(jT)
-//    val obliquity = Obliquity.Williams1994.createElements(jT)
-//    val ephem = precessPoleFromJ2000(jT, precession, rotationElements, target.normalize()).spherical
-//    val locEq = obliquity.rotatePlane(ephem, Plane.Equatorial).spherical
-//    val locNP = SphericalVector(phi = ephem.phi, theta = ephem.theta, 1.0)
-//    val locEqSun = obliquity.rotatePlane(sun, Plane.Equatorial).spherical
-//
-//    val targetEq = obliquity.rotatePlane(target, Plane.Equatorial).spherical
-//
-//    if (body !is Physic.Body.Sun) {
-//        var fromSun = (target - sun).spherical
-//        val fromSunEq = obliquity.rotatePlane(fromSun, Plane.Equatorial).spherical
-//        val subsolarLatitude = dotProduct(ephem.phi, ephem.theta, fromSunEq.phi, fromSun.theta)
-//        println("subsolarLatitude ${subsolarLatitude.toDeg()} ")
-//        val subsolarLatitude1 =  planetocentricToPlanetogeodeticLatitude(body, subsolarLatitude)
-//        println("subsolarLatitude1 ${subsolarLatitude1.toDeg()} ")
-//
-//        fromSun = (locEq - locEqSun).spherical
-//        val ra = fromSun.phi
-//        val dec = fromSun.theta
-//        val D = cos(dec) * sin(locNP.phi - ra)
-//        var N = sin(locNP.theta) * cos(dec) * cos(locNP.phi - ra)
-//        N -= cos(locNP.theta) * sin(dec)
-//
-//        var delta_lon = 0.0
-//        if (D != 0.0) atan(N / D).rad.toDeg().value
-//        if (D < 0.0) delta_lon += 180.0
-//        var subsolarLongitude = (rotationElements.speedRotation * (jT * 36525.0)).deg - delta_lon.deg + rotationElements.longitudeJ2000
-//        if (rotationElements.speedRotation < 0) subsolarLongitude = 360.deg - subsolarLongitude
-//        println("subsolarLongitude ${subsolarLongitude.normalize()}")
-//
-//        val brightLimbAngle = (PI + atan2(cos(locEqSun.theta) *
-//                sin(ephem.phi - locEqSun.phi), cos(locEqSun.theta) *
-//                sin(ephem.theta) * cos(ephem.phi - locEqSun.phi) -
-//                sin(locEqSun.theta) * cos(ephem.theta)))
-//
-//        println("brightLimbAngle ${brightLimbAngle.rad.toDeg()}")
-//
-//
-//    }
-//
-//    // Obtain position angle of pole as seen from Earth
-//    val positionAngleOfPole = dotProduct(ephem.phi, ephem.theta, targetEq.phi, targetEq.theta)
-//    println("positionAngleOfPole ${positionAngleOfPole.toDeclination()} ")
-//
-//    // Correct value (planetocentric to planeto-geodetic latitude)
-//    val positionAngleOfPole1 =  planetocentricToPlanetogeodeticLatitude(body, positionAngleOfPole)
-//    println("positionAngleOfPole1 ${positionAngleOfPole1.toDeclination()} ")
-//
-//    val D = cos(locEq.theta) * sin(locNP.phi - locEq.phi)
-//    var N = sin(locNP.theta) * cos(locEq.theta) * cos(locNP.phi - locEq.phi)
-//    N -= cos(locNP.theta) * sin(locEq.theta)
-//
-//    val delta_lon = atan2(N, D).rad.toDeg()
-//
-//    val meridian0 = (rotationElements.speedRotation * (jT * 36525.0)).deg - delta_lon
-//    var meridian = meridian0 + rotationElements.longitudeJ2000
-//    if (rotationElements.speedRotation < 0.0) meridian = 360.deg - meridian
-//    meridian = meridian.normalize()
-//    val longitudeOfCentralMeridian = meridian.toRad()
-//
-//    println("longitudeOfCentralMeridian ${longitudeOfCentralMeridian.toDeg()}")
-//    // for sun
-//    val sunLongitudeOfCentralMeridian = Radian.PI2 - longitudeOfCentralMeridian
-//    println("sunLongitudeOfCentralMeridian ${sunLongitudeOfCentralMeridian.toDeg()}")
-//    println("====================================================================")
-//}
