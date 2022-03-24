@@ -32,7 +32,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = sunEphemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Sun,
             Physic.Model.IAU2018,
@@ -65,7 +65,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = ephemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Mercury,
             Physic.Model.IAU2018,
@@ -99,7 +99,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = ephemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Venus,
             Physic.Model.IAU2018,
@@ -133,7 +133,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = ephemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Mars,
             Physic.Model.IAU2018,
@@ -168,7 +168,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = ephemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Jupiter,
             Physic.Model.IAU2018,
@@ -202,7 +202,7 @@ class PhysicElementsTest {
         val sunVector = sunEphemeris.invoke(instant.toJT())
         val objectVector = ephemeris.invoke(instant.toJT())
 
-        val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+        val elements: PhysicEphemeris = Physic.createElements(
             instant.toJT(),
             Physic.Body.Moon,
             Physic.Model.IAU2018,
