@@ -1,6 +1,7 @@
 package net.arwix.urania.core.physic.impl
 
 import net.arwix.urania.core.calendar.JT
+import net.arwix.urania.core.calendar.MJD
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.calendar.toMJD
 import net.arwix.urania.core.math.angle.*
@@ -14,15 +15,16 @@ internal object PhysicModelMoonImpl : Physic.Elements {
 
     override fun Physic.Model.getNorthPole(jT: JT): PhysicEphemeris.NorthPole {
 
-        val mjd = jT.toMJD()
-        val e1 = (125.045 - 0.0529921 * mjd).deg.toRad()
-        val e2 = (250.089 - 0.1059842 * mjd).deg.toRad()
-        val e3 = (260.008 + 13.0120009 * mjd).deg.toRad()
-        val e4 = (176.625 + 13.3407154 * mjd).deg.toRad()
-        val e6 = (311.589 + 26.4057084 * mjd).deg.toRad()
-        val e7 = (134.963 + 13.0649930 * mjd).deg.toRad()
-        val e10 = (15.134 - 0.1589763 * mjd).deg.toRad()
-        val e13 = (25.053 + 12.9590088 * mjd).deg.toRad()
+        val d = jT.toMJD() - MJD.J2000
+
+        val e1 = (125.045 - 0.0529921 * d).deg.toRad()
+        val e2 = (250.089 - 0.1059842 * d).deg.toRad()
+        val e3 = (260.008 + 13.0120009 * d).deg.toRad()
+        val e4 = (176.625 + 13.3407154 * d).deg.toRad()
+        val e6 = (311.589 + 26.4057084 * d).deg.toRad()
+        val e7 = (134.963 + 13.0649930 * d).deg.toRad()
+        val e10 = (15.134 - 0.1589763 * d).deg.toRad()
+        val e13 = (25.053 + 12.9590088 * d).deg.toRad()
 
         return PhysicEphemeris.NorthPole(
             rightAscension = (269.9949 + 0.0031 * jT -
@@ -41,7 +43,7 @@ internal object PhysicModelMoonImpl : Physic.Elements {
                     0.0029 * cos(e6) +
                     0.0009 * cos(e7) +
                     0.0008 * cos(e10) -
-                    cos(e13)).deg.toRad()
+                    0.0009 * cos(e13)).deg.toRad()
         )
     }
 
@@ -57,23 +59,23 @@ internal object PhysicModelMoonImpl : Physic.Elements {
     }
 
     override fun Physic.Model.getLongitudeJ2000(jT: JT): Degree {
-        val mjd = jT.toMJD()
-        val mjd2 = mjd * mjd
-        val e1 = (125.045 - 0.0529921 * mjd).deg.toRad()
-        val e2 = (250.089 - 0.1059842 * mjd).deg.toRad()
-        val e3 = (260.008 + 13.0120009 * mjd).deg.toRad()
-        val e4 = (176.625 + 13.3407154 * mjd).deg.toRad()
-        val e5 = (357.529 + 0.9856003 * mjd).deg.toRad()
-        val e6 = (311.589 + 26.4057084 * mjd).deg.toRad()
-        val e7 = (134.963 + 13.0649930 * mjd).deg.toRad()
-        val e8 = (276.617 + 0.3287146 * mjd).deg.toRad()
-        val e9 = (34.226 + 1.7484877 * mjd).deg.toRad()
-        val e10 = (15.134 - 0.1589763 * mjd).deg.toRad()
-        val e11 = (119.743 + 0.0036096 * mjd).deg.toRad()
-        val e12 = (239.961 + 0.1643573 * mjd).deg.toRad()
-        val e13 = (25.053 + 12.9590088 * mjd).deg.toRad()
+        val d = jT.toMJD() - MJD.J2000
+        val d2 = d * d
+        val e1 = (125.045 - 0.0529921 * d).deg.toRad()
+        val e2 = (250.089 - 0.1059842 * d).deg.toRad()
+        val e3 = (260.008 + 13.0120009 * d).deg.toRad()
+        val e4 = (176.625 + 13.3407154 * d).deg.toRad()
+        val e5 = (357.529 + 0.9856003 * d).deg.toRad()
+        val e6 = (311.589 + 26.4057084 * d).deg.toRad()
+        val e7 = (134.963 + 13.0649930 * d).deg.toRad()
+        val e8 = (276.617 + 0.3287146 * d).deg.toRad()
+        val e9 = (34.226 + 1.7484877 * d).deg.toRad()
+        val e10 = (15.134 - 0.1589763 * d).deg.toRad()
+        val e11 = (119.743 + 0.0036096 * d).deg.toRad()
+        val e12 = (239.961 + 0.1643573 * d).deg.toRad()
+        val e13 = (25.053 + 12.9590088 * d).deg.toRad()
 
-        return (38.3213 - 1.4E-12 * mjd2 +
+        return (38.3213 - 1.4E-12 * d2 +
                 3.5610 * sin(e1) +
                 0.1208 * sin(e2) -
                 0.0642 * sin(e3) +
