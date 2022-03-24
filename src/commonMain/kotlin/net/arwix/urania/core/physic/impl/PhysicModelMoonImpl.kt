@@ -11,6 +11,7 @@ import net.arwix.urania.core.toRad
 import kotlin.math.log10
 import kotlin.math.pow
 
+// https://www.yumpu.com/en/document/read/29767823/pdf-document-orbital-and-celestial-mechanics-website
 internal object PhysicModelMoonImpl : Physic.Elements {
 
     override fun Physic.Model.getNorthPole(jT: JT): PhysicEphemeris.NorthPole {

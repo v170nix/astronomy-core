@@ -33,8 +33,11 @@ class PhysicElementsTest {
         val objectVector = sunEphemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
-            Physic.Model.IAU2000,
-            sunVector, objectVector, Physic.Body.Sun, instant.toJT()
+            instant.toJT(),
+            Physic.Body.Sun,
+            Physic.Model.IAU2018,
+            sunVector,
+            objectVector
         )
 
         assertEquals(1937.185, elements.angularDiameter.toDeg().value * 60.0 * 60.0, 2e-2)
@@ -44,8 +47,11 @@ class PhysicElementsTest {
         assertEquals(PhysicEphemeris.Relative.Leads, elements.relative)
         assertEquals(1937.185, elements.angularDiameter.toDeg().value * 60.0 * 60.0, 1e0)
         assertEquals(Double.NaN, elements.defectOfIllumination.toDeg().value)
+        assertEquals(-26.762, elements.magnitude, 1e-3)
         assertEquals(286.13, elements.northPole.rightAscension.toDeg().value, 1e-3)
         assertEquals(63.87, elements.northPole.declination.toDeg().value, 1e-3)
+        assertEquals(222.648529, elements.longitudeOfCentralMeridian.toDeg().value, 4e-1)
+        assertEquals(-7.220366, elements.positionAngleOfPole.toDeg().value, 2e-2)
     }
 
     @Test
@@ -60,8 +66,10 @@ class PhysicElementsTest {
         val objectVector = ephemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+            instant.toJT(),
+            Physic.Body.Mercury,
             Physic.Model.IAU2018,
-            sunVector, objectVector, Physic.Body.Mercury, instant.toJT())
+            sunVector, objectVector)
 
         assertEquals(26.5303, elements.elongation.toDeg().value, 1e-3)
         assertEquals(PhysicEphemeris.Relative.Leads, elements.relative)
@@ -75,7 +83,7 @@ class PhysicElementsTest {
         assertEquals(133.434734, elements.longitudeOfCentralMeridian.toDeg().value, 2e-1)
         assertEquals(-7.518352, elements.positionAngleOfPole.toDeg().value, 2e-2)
 //        assertEquals(343.7464513346991, elements.positionAngleOfAxis.toDeg().value)
-        assertEquals(226.945782, elements.subsolarLongitude!!.toDeg().value, 1e-1)
+        assertEquals(226.945782, elements.subsolarLongitude!!.toDeg().value, 2e-1)
         assertEquals(-0.007998, elements.subsolarLatitude!!.toDeg().value, 5e-3)
 //        assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
     }
@@ -92,9 +100,10 @@ class PhysicElementsTest {
         val objectVector = ephemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+            instant.toJT(),
+            Physic.Body.Venus,
             Physic.Model.IAU2018,
-            sunVector, objectVector, Physic.Body.Venus, instant.toJT()
-        )
+            sunVector, objectVector)
 
         assertEquals(6.4394, elements.elongation.toDeg().value, 1e-3)
         assertEquals(PhysicEphemeris.Relative.Leads, elements.relative)
@@ -125,9 +134,10 @@ class PhysicElementsTest {
         val objectVector = ephemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+            instant.toJT(),
+            Physic.Body.Mars,
             Physic.Model.IAU2018,
-            sunVector, objectVector, Physic.Body.Mars, instant.toJT()
-        )
+            sunVector, objectVector)
 
         assertEquals(77.5493, elements.elongation.toDeg().value, 1e-3)
         assertEquals(PhysicEphemeris.Relative.Trails, elements.relative)
@@ -159,9 +169,10 @@ class PhysicElementsTest {
         val objectVector = ephemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+            instant.toJT(),
+            Physic.Body.Jupiter,
             Physic.Model.IAU2018,
-            sunVector, objectVector, Physic.Body.Jupiter, instant.toJT()
-        )
+            sunVector, objectVector)
 
         assertEquals(24.0465, elements.elongation.toDeg().value, 1e-3)
         assertEquals(PhysicEphemeris.Relative.Leads, elements.relative)
@@ -192,9 +203,10 @@ class PhysicElementsTest {
         val objectVector = ephemeris.invoke(instant.toJT())
 
         val elements: PhysicEphemeris = PhysicEphemeris.createElements(
+            instant.toJT(),
+            Physic.Body.Moon,
             Physic.Model.IAU2018,
-            sunVector, objectVector, Physic.Body.Moon, instant.toJT()
-        )
+            sunVector, objectVector)
 
         assertEquals(156.7212, elements.elongation.toDeg().value, 1e-3)
         assertEquals(23.2232, elements.phaseAngle.toDeg().value, 1e-2)
@@ -203,13 +215,14 @@ class PhysicElementsTest {
         assertEquals(1956.864, elements.angularDiameter.toDeg().value * 60.0 * 60.0, 1e0)
         assertEquals(79.2419, elements.defectOfIllumination.toDeg().value * 60.0 * 60.0, 1e0)
         assertEquals(-12.236, elements.magnitude, 1e-3)
-//        assertEquals(266.22699, elements.northPole.rightAscension.toDeg().value, 1e-2)
-//        assertEquals(66.89277, elements.northPole.declination.toDeg().value, 1e-2)
+
+        assertEquals(266.22699, elements.northPole.rightAscension.toDeg().value, 1e-2)
+        assertEquals(66.89277, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(357.652298, elements.longitudeOfCentralMeridian.toDeg().value, 3e-1)
-//        assertEquals(-6.228038, elements.positionAngleOfPole.toDeg().value, 2e-2)
+        assertEquals(-6.228038, elements.positionAngleOfPole.toDeg().value, 2e-2)
 //        assertEquals(340.0 + 24.0 / 60.0 + 20.0 / 60.0 / 60.0, elements.positionAngleOfAxis.toDeg().value, 2e-2)
-//        assertEquals(334.854834, elements.subsolarLongitude!!.toDeg().value, 4e-1)
-//        assertEquals(-1.531415, elements.subsolarLatitude!!.toDeg().value, 5e-3)
+        assertEquals(334.854834, elements.subsolarLongitude!!.toDeg().value, 4e-1)
+        assertEquals(-1.531415, elements.subsolarLatitude!!.toDeg().value, 5e-3)
     }
 
 }

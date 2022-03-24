@@ -135,11 +135,11 @@ data class PhysicEphemeris(
         // https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/Tutorials/pdf/individual_docs/17_frames_and_coordinate_systems.pdf
         // IAU_MARS
         fun createElements(
+            jT: JT,
+            body: Physic.Body,
             model: Physic.Model,
             @Apparent @Geocentric @Ecliptic sunVector: Vector, // observer-sun vector
             @Apparent @Geocentric @Ecliptic target: Vector, // observer-body vector
-            body: Physic.Body,
-            jT: JT,
             @Equatorial precessionElements: PrecessionElements = Precession.IAU2000.createElements(jT),
             obliquityElements: ObliquityElements = precessionElements.id.findNearestObliquityModel().createElements(jT)
         ): PhysicEphemeris {
@@ -298,13 +298,13 @@ data class PhysicEphemeris(
                 defectOfIllumination = angularRadius * 2.0 * (1.0 - phase),
                 magnitude = magnitude,
                 northPole = northPole,
-                longitudeOfCentralMeridian = longitudeOfCentralMeridian,
+                longitudeOfCentralMeridian = longitudeOfCentralMeridian.normalize(),
                 longitudeOfCentralMeridianSystemI = longitudeOfCentralMeridianSystemI?.normalize(),
                 longitudeOfCentralMeridianSystemII = longitudeOfCentralMeridianSystemII?.normalize(),
                 longitudeOfCentralMeridianSystemIII = longitudeOfCentralMeridianSystemIII?.normalize(),
                 positionAngleOfPole = positionAngleOfPole,
                 positionAngleOfAxis = positionAngleOfAxis,
-                subsolarLongitude = subsolarLongitude,
+                subsolarLongitude = subsolarLongitude?.normalize(),
                 subsolarLatitude = subsolarLatitude,
                 longitudeJ2000 = with(body) { model.getLongitudeJ2000(jT) },
                 speedRotation = with(body) { model.getSpeedRotation() },
@@ -313,12 +313,14 @@ data class PhysicEphemeris(
         }
 
         fun createElements(
+            jT: JT,
             model: Physic.Model,
             @Apparent @Geocentric @Ecliptic sunVector: EphemerisVector, // observer-sun vector
+            body: Physic.Body,
             @Apparent @Geocentric @Ecliptic target: EphemerisVector, // observer-body vector
-            body: Physic.Body, jT: JT
+            @Equatorial precessionElements: PrecessionElements = Precession.IAU2000.createElements(jT),
+            obliquityElements: ObliquityElements = precessionElements.id.findNearestObliquityModel().createElements(jT)
         ): PhysicEphemeris {
-
             if (sunVector.metadata.orbit != Orbit.Geocentric ||
                 sunVector.metadata.plane != Plane.Ecliptic ||
                 sunVector.metadata.epoch != target.metadata.epoch ||
@@ -326,7 +328,7 @@ data class PhysicEphemeris(
                 target.metadata.plane != Plane.Ecliptic
             ) throw IllegalArgumentException()
 
-            return createElements(model, sunVector.value, target.value, body, jT)
+            return createElements(jT, body, model, sunVector.value, target.value, precessionElements, obliquityElements)
         }
     }
 }
