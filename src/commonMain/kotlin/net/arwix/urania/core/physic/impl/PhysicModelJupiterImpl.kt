@@ -3,11 +3,11 @@ package net.arwix.urania.core.physic.impl
 import net.arwix.urania.core.calendar.JT
 import net.arwix.urania.core.calendar.times
 import net.arwix.urania.core.math.angle.*
+import net.arwix.urania.core.math.polynomialSum
 import net.arwix.urania.core.physic.Physic
 import net.arwix.urania.core.physic.PhysicEphemeris
 import net.arwix.urania.core.toRad
 import kotlin.math.log10
-import kotlin.math.pow
 
 internal object PhysicModelJupiterImpl : Physic.Elements {
 
@@ -50,11 +50,7 @@ internal object PhysicModelJupiterImpl : Physic.Elements {
                 -3.7E-04 * phaseAngle + 6.16E-04 * phaseAngle * phaseAngle
             } else {
                 val f = phaseAngle / 180.0
-                -2.5 * log10(
-                    1.0 - 1.507 * f - 0.363 *
-                            f.value.pow(2.0) - 0.062 * f.value.pow(3.0) +
-                            2.809 * f.value.pow(4.0) - 1.876 * f.value.pow(5.0)
-                )
+                -2.5 * log10(doubleArrayOf(1.0, -1.507, -0.363, -0.062, 2.809, -1.876).polynomialSum(f.value))
             }
             5.0 * log10(distance * distanceFromSun) + if (phaseAngle < 12.0.deg) -9.395 + factor else -9.428 + factor
         }
