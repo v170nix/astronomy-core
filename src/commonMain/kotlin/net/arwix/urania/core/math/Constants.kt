@@ -10,6 +10,7 @@ const val ARCSEC_2RAD = 2 * PI / (360.0 * 3600.0)
 const val JULIAN_DAYS_PER_CENTURY = 36525.0
 /** The Julian Day which represents noon on 2000-01-01.  */
 const val JD_2000 = 2451545.0
+const val DELTA_JD_MJD = 2400000.5
 /** Length of a tropical year in days for B1950.  */
 const val TROPICAL_YEAR = 365.242198781
 /** Arc minutes in one degree = 60.  */
