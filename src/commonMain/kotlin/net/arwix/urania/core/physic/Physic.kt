@@ -81,6 +81,9 @@ object Physic {
 //        object P19Borrelly : Body(EllipsoidObject.None)
     }
 
+    fun isSuperMoon(moonDistanceInKm: Double) = moonDistanceInKm < 360_000
+
+
     // https://wgc.jpl.nasa.gov:8443/webgeocalc/#SubObserverPoint
     // https://naif.jpl.nasa.gov/pub/naif/toolkit_docs/Tutorials/pdf/individual_docs/17_frames_and_coordinate_systems.pdf
     // IAU_MARS
