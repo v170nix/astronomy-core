@@ -4,7 +4,7 @@ plugins {
 }
 
 group = "net.arwix.urania"
-version = "1.0.0-alpha15"
+version = "1.0.0-alpha16"
 
 repositories {
     mavenCentral()
