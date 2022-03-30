@@ -36,6 +36,12 @@ class LunarPhaseEclipseCalculationTest {
 
     @Test
     fun test2() = runTest {
+        // https://eclipse.gsfc.nasa.gov/SEplot/SEplot2001/SE2017Aug21T.GIF
+        // https://eclipse.gsfc.nasa.gov/SEpath/SEpath2001/SE2017Aug21Tpath.html
+        // https://eclipse.gsfc.nasa.gov/solar.html
+        // https://eclipse.gsfc.nasa.gov/SEsaros/SEsaros0-180.html
+
+
         val instant = LocalDateTime(2017, Month.AUGUST, 21, 18 , 25, 32).toInstant(TimeZone.UTC)
 //        val instant = LocalDateTime(2019, Month.JULY, 2, 19, 22, 59).toInstant(TimeZone.UTC)
         val mjd = instant.toMJD(true)
