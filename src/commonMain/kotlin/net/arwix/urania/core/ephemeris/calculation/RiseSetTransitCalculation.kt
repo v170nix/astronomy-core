@@ -49,6 +49,10 @@ object RiseSetTransitCalculation {
                 isStar
             )
 
+            object DefaultSun :RiseSet((-50.0 / 60.0).deg.toRad())
+
+            object DefaultMoon: RiseSet((8 / 60).deg.toRad())
+
             data class Custom(
                 override val elevation: Radian = Radian.Zero,
                 val angularRadius: Radian = Radian.Zero,
@@ -200,7 +204,6 @@ object RiseSetTransitCalculation {
             is InnerRequest.Set -> {
                 InnerRequest.Set.toInnerResult(cAngle) { hour ->
                     val setTime = celestialHoursToEarthTime * ((body.phi + hour - siderealTime).normalize() + delta)
-                    InnerResult.Set.Value(mJDUT + setTime.mJD)
                     mJDUT + setTime.mJD
                 }
             }
