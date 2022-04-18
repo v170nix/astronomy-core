@@ -5,10 +5,13 @@ import kotlinx.datetime.*
 import net.arwix.urania.core.calendar.*
 import net.arwix.urania.core.ephemeris.*
 import net.arwix.urania.core.ephemeris.calculation.SolarEclipseCalculationIntersect
+import net.arwix.urania.core.ephemeris.calculation.moon.LunarEclipseBruteForceCalculation
 import net.arwix.urania.core.ephemeris.calculation.moon.LunarPhaseAndEclipseCalculation
 import net.arwix.urania.core.ephemeris.fast.FastMoonEphemeris
 import net.arwix.urania.core.ephemeris.fast.FastSunEphemeris
+import net.arwix.urania.core.math.angle.rad
 import net.arwix.urania.core.math.vector.Vector
+import net.arwix.urania.core.toDeg
 import net.arwix.urania.core.transformation.obliquity.Obliquity
 import net.arwix.urania.core.transformation.obliquity.createElements
 import net.arwix.urania.moshier.MoshierEphemeris
@@ -99,4 +102,29 @@ class LunarPhaseEclipseCalculationTest {
 
     }
 
+    @Test
+    fun test3() = runTest {
+
+        val instant = LocalDateTime(2023, Month.MAY, 5, 0, 0, 0).toInstant(TimeZone.UTC)
+
+        val sunEphemeris: MoshierEphemeris = MoshierEphemerisFactory(instant.toJT()).createGeocentricEphemeris(
+            bodyEphemeris = MoshierSunEphemeris,
+            epoch = Epoch.Apparent,
+            plane = Plane.Equatorial
+        )
+
+        val moonEphemeris: MoshierEphemeris = MoshierEphemerisFactory(instant.toJT()).createGeocentricEphemeris(
+            bodyEphemeris = MoshierMoonEphemeris,
+            epoch = Epoch.Apparent,
+            plane = Plane.Equatorial
+        )
+
+        val (result, pa) = LunarEclipseBruteForceCalculation(instant.toMJD(), sunEphemeris, moonEphemeris)
+
+        result.forEachIndexed { index, d ->
+            val date = runCatching { d.mJD.toInstant() }.getOrNull()
+            println("$index $date ${pa[index].rad.toDeg()}")
+        }
+
+    }
 }
