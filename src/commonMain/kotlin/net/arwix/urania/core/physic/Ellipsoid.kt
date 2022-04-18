@@ -2,7 +2,6 @@
 
 package net.arwix.urania.core.physic
 
-import net.arwix.urania.core.math.AU
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.rad
 import net.arwix.urania.core.math.angle.sin
@@ -23,7 +22,7 @@ interface Ellipsoid {
     }
 
     fun getAngularRadius(distanceInKm: Double): Radian {
-        return atan(equatorialRadius / distanceInKm / AU).rad
+        return atan(equatorialRadius / distanceInKm).rad
     }
 }
 
