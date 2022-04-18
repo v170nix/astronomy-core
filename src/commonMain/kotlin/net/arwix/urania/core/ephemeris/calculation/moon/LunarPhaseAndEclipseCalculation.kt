@@ -20,6 +20,7 @@ import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.sqrt
 
+@Suppress("unused")
 object LunarPhaseAndEclipseCalculation {
 
     data class Event(val instant: Instant, val phase: Phase, val eclipse: Eclipse? = null)
@@ -44,33 +45,36 @@ object LunarPhaseAndEclipseCalculation {
         class Partial(timeOfMaximumEclipseMJD: Double, val magnitude: Double) : SolarEclipse(timeOfMaximumEclipseMJD)
     }
 
-    sealed class LunarEclipse(timeOfMaximumEclipseMJD: Double) : Eclipse(timeOfMaximumEclipseMJD) {
+    sealed class LunarEclipse(
+        timeOfMaximumEclipseMJD: Double,
+        val partialPhasePenumbraSemiDuration: Double
+    ) : Eclipse(timeOfMaximumEclipseMJD) {
 
         class Penumbral(
             timeOfMaximumEclipseMJD: Double,
             val magnitude: Double,
             val radius: Double,
-            val partialPhasePenumbraSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD)
+            partialPhasePenumbraSemiDuration: Double
+        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
 
         class Partial(
             timeOfMaximumEclipseMJD: Double,
             val magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
-            val partialPhasePenumbraSemiDuration: Double,
+            partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD)
+        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
 
         class Total(
             timeOfMaximumEclipseMJD: Double,
             val magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
-            val partialPhasePenumbraSemiDuration: Double,
+            partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double,
             val totalPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD)
+        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
 
     }
 
@@ -85,7 +89,7 @@ object LunarPhaseAndEclipseCalculation {
         val count = abs(endK - initK).toInt()
         return calculate(beginInstant, EventType.Next, count, addEclipses, dispatcher).filter {
             it.instant.epochSeconds >= beginInstant.epochSeconds &&
-            it.instant.epochSeconds <= endInstant.epochSeconds
+                    it.instant.epochSeconds <= endInstant.epochSeconds
         }
     }
 
