@@ -2,6 +2,7 @@
 
 package net.arwix.urania.core.calendar
 
+import net.arwix.urania.core.math.SECONDS_PER_DAY
 import kotlin.jvm.JvmInline
 import kotlin.math.abs
 
@@ -22,9 +23,9 @@ value class MJD(val value: Double) : Comparable<MJD> {
     inline operator fun plus(other: MJD) = MJD(value + other.value)
     inline operator fun minus(other: MJD) = MJD(value - other.value)
     inline operator fun unaryMinus() = MJD(-value)
-    inline operator fun div(other: Double): Double = value / other
+    inline operator fun div(other: Double): MJD = (value / other).mJD
     inline operator fun div(other: MJD): Double = value / other.value
-    inline operator fun times(other: Double): Double = value * other
+    inline operator fun times(other: Double): MJD = (value * other).mJD
     inline operator fun times(other: MJD): Double = value * other.value
 
     override fun compareTo(other: MJD) = value.compareTo(other.value)
@@ -62,5 +63,7 @@ value class MJD(val value: Double) : Comparable<MJD> {
 inline val Int.mJD: MJD get() = MJD(this.toDouble())
 inline val Double.mJD: MJD get() = MJD(this)
 
+inline fun MJD.isNaN() = this.value.isNaN()
+inline fun MJD.toSeconds(): Double = this.value * SECONDS_PER_DAY
 
-inline operator fun Double.times(mJD: MJD): Double = mJD * this
+inline operator fun Double.times(mJD: MJD): MJD = mJD * this

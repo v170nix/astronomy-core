@@ -159,7 +159,7 @@ object Physic {
             val deltaLongitude = atan2(N, D).rad.toDeg()
 
             val d = jT.toMJD() - MJD.J2000 - lightTime.mJD
-            val meridian0 = (model.getSpeedRotation() * d).deg - deltaLongitude
+            val meridian0 = (model.getSpeedRotation() * d.value).deg - deltaLongitude
             var meridian = meridian0 + model.getLongitudeJ2000(jT)
 
             if (model.getSpeedRotation() < 0.0) meridian = 360.deg - meridian

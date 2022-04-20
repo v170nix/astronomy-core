@@ -68,11 +68,11 @@ internal object PhysicModelMercuryImpl : Physic.Elements {
             Physic.Model.IAU2006 -> 329.548.deg
             Physic.Model.IAU2009 -> {
                 val mjd = jT.toMJD()
-                val m1 = (174.791086 + 4.092335 * mjd).deg.toRad()
-                val m2 = (349.582171 + 8.184670 * mjd).deg.toRad()
-                val m3 = (164.373257 + 12.277005 * mjd).deg.toRad()
-                val m4 = (339.164343 + 16.369340 * mjd).deg.toRad()
-                val m5 = (153.955429 + 20.461675 * mjd).deg.toRad()
+                val m1 = (174.791086 + 4.092335 * mjd.value).deg.toRad()
+                val m2 = (349.582171 + 8.184670 * mjd.value).deg.toRad()
+                val m3 = (164.373257 + 12.277005 * mjd.value).deg.toRad()
+                val m4 = (339.164343 + 16.369340 * mjd.value).deg.toRad()
+                val m5 = (153.955429 + 20.461675 * mjd.value).deg.toRad()
                 (329.5469
                         + 0.00993822 * sin(m1)
                         - 0.00104581 * sin(m2)
@@ -83,11 +83,11 @@ internal object PhysicModelMercuryImpl : Physic.Elements {
             Physic.Model.IAU2015,
             Physic.Model.IAU2018-> {
                 val mjd = jT.toMJD()
-                val m1 = (174.7910857 + 4.092335 * mjd).deg.toRad()
-                val m2 = (349.5821714 + 8.184670 * mjd).deg.toRad()
-                val m3 = (164.3732571 + 12.277005 * mjd).deg.toRad()
-                val m4 = (339.1643429 + 16.36934 * mjd).deg.toRad()
-                val m5 = (153.9554286 + 20.461675 * mjd).deg.toRad()
+                val m1 = (174.7910857 + 4.092335 * mjd.value).deg.toRad()
+                val m2 = (349.5821714 + 8.184670 * mjd.value).deg.toRad()
+                val m3 = (164.3732571 + 12.277005 * mjd.value).deg.toRad()
+                val m4 = (339.1643429 + 16.36934 * mjd.value).deg.toRad()
+                val m5 = (153.9554286 + 20.461675 * mjd.value).deg.toRad()
                 (329.5988
                         + 0.01067257 * sin(m1)
                         - 0.00112309 * sin(m2)

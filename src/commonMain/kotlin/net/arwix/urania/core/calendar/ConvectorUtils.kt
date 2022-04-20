@@ -18,7 +18,7 @@ inline fun MJD.toInstant(useDeltaT: Boolean = true): Instant {
     val deltaT = if (useDeltaT) this.getDeltaTTUT1() * 1000.0 else 0.0
     return Instant.fromEpochMilliseconds((milliseconds - deltaT).roundToLong())
 }
-inline fun MJD.toJT(): JT = JT((this - MJD.J2000) / 36525.0)
+inline fun MJD.toJT(): JT = JT((this - MJD.J2000) / 36525.0.mJD)
 
 inline fun JT.toMJD(): MJD = MJD(this * 36525.0) + MJD.J2000
 inline fun JT.toInstant(useDeltaT: Boolean = true): Instant = toMJD().toInstant(useDeltaT)

@@ -40,7 +40,7 @@ inline fun MJD.getLocalMeanSiderealTime(method: SiderealTimeMethod, position: Ob
 inline fun MJD.getGMSTLaskar1986(): Radian {
     val mJD0 = floor(this.value).mJD
     val jT0 = mJD0.toJT()
-    val secs = SECONDS_PER_DAY * (this - mJD0) // [сек]
+    val secs = (this - mJD0).toSeconds() // [сек]
     val h0 = ((-6.2e-6 * jT0 + 9.3104e-2) * jT0 + 8640184.812866) * jT0 + 24110.54841
     val msday = 1.0 + ((-1.86e-5 * jT0 + 0.186208) * jT0 + 8640184.812866) / (86400.0 * 36525.0)
     return Radian.PI2 / SECONDS_PER_DAY * ((h0 + msday * secs) % SECONDS_PER_DAY)
@@ -49,7 +49,7 @@ inline fun MJD.getGMSTLaskar1986(): Radian {
 inline fun MJD.getGMSTWilliams1994(): Radian {
     val mJD0 = floor(this.value).mJD
     val jT0 = mJD0.toJT()
-    val secs = SECONDS_PER_DAY * (this - mJD0) // [сек]
+    val secs = (this - mJD0).toSeconds() // [сек]
     val h0 = (((-2.0e-6 * jT0 - 3e-7) * jT0 + 9.27695e-2) * jT0 + 8640184.7928613) * jT0 + 24110.54841
     val msday =
         (((-(4.0 * 2.0e-6) * jT0 - (3.0 * 3e-7)) * jT0 + (2.0 * 9.27695e-2)) * jT0 + 8640184.7928613) / (86400.0 * 36525.0) + 1.0
@@ -59,10 +59,10 @@ inline fun MJD.getGMSTWilliams1994(): Radian {
 inline fun MJD.getGMSTIAU20xx(isIAU2000: Boolean): Radian {
     val mJD0 = floor(this.value).mJD
     val dt0 = this - MJD.J2000
-    val secs = SECONDS_PER_DAY * (this - mJD0) // [сек]
+    val secs = (this - mJD0).toSeconds() // [сек]
     val dayLength = 1.0027378119113546
     val jT = toJT()
-    val h0 = 2.0 * PI * (secs / SECONDS_PER_DAY + 0.5 + 0.7790572732640 + (dayLength - 1.0) * dt0)
+    val h0 = 2.0 * PI * (secs / SECONDS_PER_DAY + 0.5 + 0.7790572732640 + (dayLength - 1.0) * dt0.value)
     val gmst = h0 +
             if (isIAU2000)
                 (0.014506 + (4612.156534 + (+1.3915817 + (-0.00000044 + (-0.000029956 + (-0.0000000368) * jT) * jT) * jT) * jT) * jT) * ARCSEC_TO_RAD

@@ -16,7 +16,7 @@ internal object PhysicModelMoonImpl : Physic.Elements {
 
     override fun Physic.Model.getNorthPole(jT: JT): PhysicEphemeris.NorthPole {
 
-        val d = jT.toMJD() - MJD.J2000
+        val d = (jT.toMJD() - MJD.J2000).value
 
         val e1 = (125.045 - 0.0529921 * d).deg.toRad()
         val e2 = (250.089 - 0.1059842 * d).deg.toRad()
@@ -60,7 +60,7 @@ internal object PhysicModelMoonImpl : Physic.Elements {
     }
 
     override fun Physic.Model.getLongitudeJ2000(jT: JT): Degree {
-        val d = jT.toMJD() - MJD.J2000
+        val d = (jT.toMJD() - MJD.J2000).value
         val d2 = d * d
         val e1 = (125.045 - 0.0529921 * d).deg.toRad()
         val e2 = (250.089 - 0.1059842 * d).deg.toRad()
