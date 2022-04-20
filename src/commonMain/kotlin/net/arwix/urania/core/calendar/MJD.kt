@@ -32,7 +32,7 @@ value class MJD(val value: Double) : Comparable<MJD> {
     companion object {
         val J2000 = MJD(51544.5)
         val J1970 = MJD(40587.5)
-        val None = MJD(Double.NaN)
+        val NaN = MJD(Double.NaN)
 
         private fun getMJD(
             year: Int,
