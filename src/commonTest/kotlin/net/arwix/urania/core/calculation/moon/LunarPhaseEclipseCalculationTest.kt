@@ -105,7 +105,7 @@ class LunarPhaseEclipseCalculationTest {
     @Test
     fun test3() = runTest {
 
-        val instant = LocalDateTime(2023, Month.MAY, 5, 0, 0, 0).toInstant(TimeZone.UTC)
+        val instant = LocalDateTime(2022, Month.MAY, 16, 0, 0, 0).toInstant(TimeZone.UTC)
 
         val sunEphemeris: MoshierEphemeris = MoshierEphemerisFactory(instant.toJT()).createGeocentricEphemeris(
             bodyEphemeris = MoshierSunEphemeris,

@@ -20,7 +20,7 @@ import kotlin.math.sqrt
 @Suppress("unused")
 object LunarPhaseAndEclipseCalculation {
 
-    data class Event(val instant: Instant, val phase: Phase, val eclipse: Eclipse? = null)
+    data class Event(val instant: Instant, val phase: Phase, val simpleEclipse: SimpleEclipse? = null)
 
     enum class Phase(val delta: Double) {
         New(0.0),
@@ -33,45 +33,46 @@ object LunarPhaseAndEclipseCalculation {
         Next, Previous, Closest
     }
 
-    open class Eclipse(val timeOfMaximum: MJD)
+    open class SimpleEclipse(val timeOfMaximum: MJD)
 
-    sealed class SolarEclipse(timeOfMaximum: MJD) : Eclipse(timeOfMaximum) {
-        class Total(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
-        class Annular(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
-        class Hybrid(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
-        class Partial(timeOfMaximum: MJD, val magnitude: Double) : SolarEclipse(timeOfMaximum)
+    sealed class SimpleSolarEclipse(timeOfMaximum: MJD) : SimpleEclipse(timeOfMaximum) {
+        class Total(timeOfMaximum: MJD, val isCentral: Boolean) : SimpleSolarEclipse(timeOfMaximum)
+        class Annular(timeOfMaximum: MJD, val isCentral: Boolean) : SimpleSolarEclipse(timeOfMaximum)
+        class Hybrid(timeOfMaximum: MJD, val isCentral: Boolean) : SimpleSolarEclipse(timeOfMaximum)
+        class Partial(timeOfMaximum: MJD, val magnitude: Double) : SimpleSolarEclipse(timeOfMaximum)
     }
 
-    sealed class LunarEclipse(
+    sealed class SimpleLunarEclipse(
         timeOfMaximum: MJD,
+        val magnitude: Double,
         val partialPhasePenumbraSemiDuration: Double
-    ) : Eclipse(timeOfMaximum) {
+    ) : SimpleEclipse(timeOfMaximum) {
 
         class Penumbral(
             timeOfMaximum: MJD,
-            val magnitude: Double,
+            magnitude: Double,
             val radius: Double,
             partialPhasePenumbraSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
+        ) : SimpleLunarEclipse(timeOfMaximum, magnitude, partialPhasePenumbraSemiDuration)
 
         class Partial(
             timeOfMaximum: MJD,
-            val magnitude: Double,
+            magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
             partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
+        ) : SimpleLunarEclipse(timeOfMaximum, magnitude, partialPhasePenumbraSemiDuration)
 
         class Total(
             timeOfMaximum: MJD,
-            val magnitude: Double,
+            magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
             partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double,
             val totalPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
+        ) : SimpleLunarEclipse(timeOfMaximum, magnitude, partialPhasePenumbraSemiDuration)
     }
 
     suspend operator fun invoke(
@@ -293,18 +294,18 @@ object LunarPhaseAndEclipseCalculation {
                 if (absGamma < 0.9972 || absGamma > 0.9972 && absGamma < 0.9972 + abs(u)) {
                     val isCentral = absGamma < 0.9972
 
-                    if (u < 0) SolarEclipse.Total(timeOfMaximumEclipse.mJD, isCentral) else
-                        if (u > 0.0047) SolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral) else {
+                    if (u < 0) SimpleSolarEclipse.Total(timeOfMaximumEclipse.mJD, isCentral) else
+                        if (u > 0.0047) SimpleSolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral) else {
                             val www = 0.00464 * sqrt(1.0 - gamma * gamma)
                             if (u < www) {
-                                SolarEclipse.Hybrid(timeOfMaximumEclipse.mJD, isCentral)
+                                SimpleSolarEclipse.Hybrid(timeOfMaximumEclipse.mJD, isCentral)
                             } else {
-                                SolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral)
+                                SimpleSolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral)
                             }
                         }
                 } else {
                     val mag = (1.5433 + u - absGamma) / (0.5461 + 2.0 * u)
-                    SolarEclipse.Partial(timeOfMaximumEclipse.mJD, mag)
+                    SimpleSolarEclipse.Partial(timeOfMaximumEclipse.mJD, mag)
                 }
             } else null
 
@@ -339,13 +340,13 @@ object LunarPhaseAndEclipseCalculation {
                     val partialPhasePenumbraSemiDuration = (h * h).let(::getTime)
 
                     when {
-                        magnitudeUmbral < 0.0 -> LunarEclipse.Penumbral(
+                        magnitudeUmbral < 0.0 -> SimpleLunarEclipse.Penumbral(
                             timeOfMaximumEclipse.mJD,
                             magnitudePenumbral,
                             radiusPenumbral,
                             partialPhasePenumbraSemiDuration!!
                         )
-                        magnitudeUmbral < 1.0 -> LunarEclipse.Partial(
+                        magnitudeUmbral < 1.0 -> SimpleLunarEclipse.Partial(
                             timeOfMaximumEclipse.mJD,
                             magnitudeUmbral,
                             radiusPenumbral,
@@ -353,7 +354,7 @@ object LunarPhaseAndEclipseCalculation {
                             partialPhasePenumbraSemiDuration!!,
                             partialPhaseSemiDuration!!
                         )
-                        else -> LunarEclipse.Total(
+                        else -> SimpleLunarEclipse.Total(
                             timeOfMaximumEclipse.mJD,
                             magnitudeUmbral,
                             radiusPenumbral,

@@ -22,35 +22,18 @@ import kotlin.math.pow
 
 object LunarEclipseBruteForceCalculation {
 
-    sealed class LunarEclipse(
+
+    data class LunarEclipse internal constructor(
         val maximum: MJD,
         val p1: MJD,
-        val p4: MJD
+        val u1: MJD,
+        val u2: MJD,
+        val u3: MJD,
+        val u4: MJD,
+        val p4: MJD,
     ) {
 
-        class Penumbral internal constructor(
-            maximum: MJD,
-            p1: MJD,
-            p4: MJD,
-        ) : LunarEclipse(maximum, p1, p4)
 
-        class Partial internal constructor(
-            maximum: MJD,
-            p1: MJD,
-            val u1: MJD,
-            val u4: MJD,
-            p4: MJD,
-        ) : LunarEclipse(maximum, p1, p4)
-
-        class Total internal constructor(
-            maximum: MJD,
-            p1: MJD,
-            val u1: MJD,
-            val u2: MJD,
-            val u3: MJD,
-            val u4: MJD,
-            p4: MJD,
-        ) : LunarEclipse(maximum, p1, p4)
 
     }
 
@@ -205,14 +188,14 @@ object LunarEclipseBruteForceCalculation {
 
 
         if (!out[ShadowTotalIngress].isNaN()) {
-            LunarEclipse.Total(
+            LunarEclipse(
                 ((out[ShadowTotalIngress] + out[ShadowTotalEgress]) * 0.5).mJD,
                 p1 = out[PenumbraIngressStart].mJD,
-                u1 =  out[ShadowIngress].mJD,
-                u2 =  out[ShadowTotalIngress].mJD,
-                u3 =  out[ShadowTotalEgress].mJD,
-                u4 =  out[ShadowEgress].mJD,
-                p4 =  out[PenumbraEgress].mJD,
+                u1 = out[ShadowIngress].mJD,
+                u2 = out[ShadowTotalIngress].mJD,
+                u3 = out[ShadowTotalEgress].mJD,
+                u4 = out[ShadowEgress].mJD,
+                p4 = out[PenumbraEgress].mJD,
             )
         }
 
