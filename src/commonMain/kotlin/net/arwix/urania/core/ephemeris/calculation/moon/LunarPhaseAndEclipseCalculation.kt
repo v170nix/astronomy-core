@@ -78,7 +78,7 @@ object LunarPhaseAndEclipseCalculation {
 
     }
 
-    suspend fun invoke(
+    suspend operator fun invoke(
         beginInstant: Instant,
         endInstant: Instant,
         addEclipses: Boolean = true,
