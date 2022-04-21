@@ -4,10 +4,7 @@ import kotlinx.coroutines.*
 import kotlinx.datetime.Instant
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toLocalDateTime
-import net.arwix.urania.core.calendar.getDaysInMonth
-import net.arwix.urania.core.calendar.mJD
-import net.arwix.urania.core.calendar.toInstant
-import net.arwix.urania.core.calendar.toMJD
+import net.arwix.urania.core.calendar.*
 import net.arwix.urania.core.math.DELTA_JD_MJD
 import net.arwix.urania.core.math.JULIAN_DAYS_PER_CENTURY
 import net.arwix.urania.core.math.SECONDS_PER_DAY
@@ -36,46 +33,45 @@ object LunarPhaseAndEclipseCalculation {
         Next, Previous, Closest
     }
 
-    open class Eclipse(val timeOfMaximumEclipseMJD: Double)
+    open class Eclipse(val timeOfMaximum: MJD)
 
-    sealed class SolarEclipse(timeOfMaximumEclipseMJD: Double) : Eclipse(timeOfMaximumEclipseMJD) {
-        class Total(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
-        class Annular(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
-        class Hybrid(timeOfMaximumEclipseMJD: Double, val isCentral: Boolean) : SolarEclipse(timeOfMaximumEclipseMJD)
-        class Partial(timeOfMaximumEclipseMJD: Double, val magnitude: Double) : SolarEclipse(timeOfMaximumEclipseMJD)
+    sealed class SolarEclipse(timeOfMaximum: MJD) : Eclipse(timeOfMaximum) {
+        class Total(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
+        class Annular(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
+        class Hybrid(timeOfMaximum: MJD, val isCentral: Boolean) : SolarEclipse(timeOfMaximum)
+        class Partial(timeOfMaximum: MJD, val magnitude: Double) : SolarEclipse(timeOfMaximum)
     }
 
     sealed class LunarEclipse(
-        timeOfMaximumEclipseMJD: Double,
+        timeOfMaximum: MJD,
         val partialPhasePenumbraSemiDuration: Double
-    ) : Eclipse(timeOfMaximumEclipseMJD) {
+    ) : Eclipse(timeOfMaximum) {
 
         class Penumbral(
-            timeOfMaximumEclipseMJD: Double,
+            timeOfMaximum: MJD,
             val magnitude: Double,
             val radius: Double,
             partialPhasePenumbraSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
+        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
 
         class Partial(
-            timeOfMaximumEclipseMJD: Double,
+            timeOfMaximum: MJD,
             val magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
             partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
+        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
 
         class Total(
-            timeOfMaximumEclipseMJD: Double,
+            timeOfMaximum: MJD,
             val magnitude: Double,
             val radiusPenumbral: Double,
             val radiusUmbral: Double,
             partialPhasePenumbraSemiDuration: Double,
             val partialPhaseSemiDuration: Double,
             val totalPhaseSemiDuration: Double
-        ) : LunarEclipse(timeOfMaximumEclipseMJD, partialPhasePenumbraSemiDuration)
-
+        ) : LunarEclipse(timeOfMaximum, partialPhasePenumbraSemiDuration)
     }
 
     suspend operator fun invoke(
@@ -297,18 +293,18 @@ object LunarPhaseAndEclipseCalculation {
                 if (absGamma < 0.9972 || absGamma > 0.9972 && absGamma < 0.9972 + abs(u)) {
                     val isCentral = absGamma < 0.9972
 
-                    if (u < 0) SolarEclipse.Total(timeOfMaximumEclipse, isCentral) else
-                        if (u > 0.0047) SolarEclipse.Annular(timeOfMaximumEclipse, isCentral) else {
+                    if (u < 0) SolarEclipse.Total(timeOfMaximumEclipse.mJD, isCentral) else
+                        if (u > 0.0047) SolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral) else {
                             val www = 0.00464 * sqrt(1.0 - gamma * gamma)
                             if (u < www) {
-                                SolarEclipse.Hybrid(timeOfMaximumEclipse, isCentral)
+                                SolarEclipse.Hybrid(timeOfMaximumEclipse.mJD, isCentral)
                             } else {
-                                SolarEclipse.Annular(timeOfMaximumEclipse, isCentral)
+                                SolarEclipse.Annular(timeOfMaximumEclipse.mJD, isCentral)
                             }
                         }
                 } else {
                     val mag = (1.5433 + u - absGamma) / (0.5461 + 2.0 * u)
-                    SolarEclipse.Partial(timeOfMaximumEclipse, mag)
+                    SolarEclipse.Partial(timeOfMaximumEclipse.mJD, mag)
                 }
             } else null
 
@@ -344,13 +340,13 @@ object LunarPhaseAndEclipseCalculation {
 
                     when {
                         magnitudeUmbral < 0.0 -> LunarEclipse.Penumbral(
-                            timeOfMaximumEclipse,
+                            timeOfMaximumEclipse.mJD,
                             magnitudePenumbral,
                             radiusPenumbral,
                             partialPhasePenumbraSemiDuration!!
                         )
                         magnitudeUmbral < 1.0 -> LunarEclipse.Partial(
-                            timeOfMaximumEclipse,
+                            timeOfMaximumEclipse.mJD,
                             magnitudeUmbral,
                             radiusPenumbral,
                             radiusUmbral,
@@ -358,7 +354,7 @@ object LunarPhaseAndEclipseCalculation {
                             partialPhaseSemiDuration!!
                         )
                         else -> LunarEclipse.Total(
-                            timeOfMaximumEclipse,
+                            timeOfMaximumEclipse.mJD,
                             magnitudeUmbral,
                             radiusPenumbral,
                             radiusUmbral,
