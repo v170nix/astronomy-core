@@ -428,6 +428,7 @@ object RiseSetTransitCalculation {
                             }
                         } else break
                     }
+                    else -> throw IllegalStateException("")
                 }
             }
             lastTimeEvent = timeEvent.value

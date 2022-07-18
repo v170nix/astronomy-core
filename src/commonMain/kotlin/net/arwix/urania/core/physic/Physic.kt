@@ -9,6 +9,7 @@ import net.arwix.urania.core.ephemeris.EphemerisVector
 import net.arwix.urania.core.ephemeris.Epoch
 import net.arwix.urania.core.ephemeris.Orbit
 import net.arwix.urania.core.ephemeris.Plane
+import net.arwix.urania.core.math.AU
 import net.arwix.urania.core.math.LIGHT_TIME_DAYS_PER_AU
 import net.arwix.urania.core.math.angle.*
 import net.arwix.urania.core.math.vector.SphericalVector
@@ -107,7 +108,9 @@ object Physic {
         val lp = helioObject.phi
         val le = Radian.PI + target.spherical.phi
 
-        val angularRadius = body.ellipsoid.getAngularRadius(ro)
+        val roInKm = ro * AU
+
+        val angularRadius = body.ellipsoid.getAngularRadius(roInKm)
         val elongation = acos((ro * ro + re * re - rp * rp) / (2.0 * ro * re)).rad
         val cosPhaseAngle = (ro * ro + rp * rp - re * re) / (2.0 * ro * rp)
         val sinPhaseAngle = re * sin(le - lp) / ro

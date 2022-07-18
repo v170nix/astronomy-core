@@ -1,15 +1,18 @@
 plugins {
-    kotlin("multiplatform") version "1.6.10"
+    kotlin("multiplatform") version "1.7.10"
     id("maven-publish")
 }
 
 group = "net.arwix.urania"
-version = "1.0.0-alpha20"
+version = "1.0.0-alpha21"
 
 repositories {
     mavenCentral()
     mavenLocal()
 }
+//dependencies {
+//    implementation("org.testng:testng:7.1.0")
+//}
 //dependencies {
 //    implementation("junit:junit:4.13.1")
 //}
@@ -51,15 +54,15 @@ kotlin {
     sourceSets {
         val commonMain by getting {
             dependencies {
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.3.2")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.0")
             }
         }
         val commonTest by getting {
             dependencies {
                 implementation(kotlin("test"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
-                implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
+                implementation ("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
 //                implementation ("net.arwix.urania:astronomy-vsop87a:0.0.2")
                 implementation ("net.arwix.urania:astronomy-moshier:1.0-alpha10")
             }
@@ -74,7 +77,7 @@ kotlin {
         val jsTest by getting {
             dependencies {
                 implementation(kotlin("test-js"))
-                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.0")
+                implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.6.4")
                 implementation("org.jetbrains.kotlin:kotlin-test-js")
 //                implementation(npm("@js-joda/timezone", "2.3.0"))
             }
