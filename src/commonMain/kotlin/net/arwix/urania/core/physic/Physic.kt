@@ -24,6 +24,8 @@ import net.arwix.urania.core.transformation.obliquity.createElements
 import net.arwix.urania.core.transformation.precession.Precession
 import net.arwix.urania.core.transformation.precession.PrecessionElements
 import net.arwix.urania.core.transformation.precession.createElements
+import kotlin.js.JsExport
+import kotlin.js.JsName
 import kotlin.math.*
 
 
@@ -31,6 +33,7 @@ import kotlin.math.*
 // https://bitbucket.org/v170n1x/sunexplorer.org/src/72854a8bdbcb12741971a24279ea6a560a172bfa/mobile/src/main/kotlin/org/sunexplorer/old/GraticulePath.kt?at=master#GraticulePath.kt-4
 // https://web.archive.org/web/20200512151452/http://www.hnsky.org/iau-iag.htm
 
+@JsExport
 object Physic {
 
     sealed class Model {
@@ -268,6 +271,7 @@ object Physic {
         )
     }
 
+    @JsName("createElementsFromEphemerisVector")
     fun createElements(
         jT: JT,
         model: Model,

@@ -31,10 +31,11 @@ kotlin {
         }
     }
     js(IR) {
-//        binaries.library()
-        nodejs {
+//        moduleName = "@astronomy/core"
+        nodejs() {
 
         }
+        browser()
         compilations.all {
 //            kotlinOptions {
 //                sourceMap = true

@@ -5,9 +5,11 @@ package net.arwix.urania.core.physic
 import net.arwix.urania.core.math.angle.Radian
 import net.arwix.urania.core.math.angle.rad
 import net.arwix.urania.core.math.angle.sin
+import kotlin.js.JsExport
 import kotlin.math.atan
 import kotlin.math.pow
 
+@JsExport
 interface Ellipsoid {
     val equatorialRadius: Double
     val inverseFlatteningFactor: Double
@@ -26,6 +28,7 @@ interface Ellipsoid {
     }
 }
 
+@JsExport
 sealed class EllipsoidObject: Ellipsoid {
 
     object Sun: EllipsoidObject() {

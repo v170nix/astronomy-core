@@ -2,6 +2,7 @@ package net.arwix.urania.core.physic
 
 import net.arwix.urania.core.math.angle.Degree
 import net.arwix.urania.core.math.angle.Radian
+import kotlin.js.JsExport
 
 
 /**
@@ -12,6 +13,8 @@ import net.arwix.urania.core.math.angle.Radian
  * @param defectOfIllumination Defect of illumination. The maximum angular width of the target body's
  * assumed circular disk diameter NOT illuminated by the Sun.
  */
+
+@JsExport
 data class PhysicEphemeris(
     // S-O-T /r
     val elongation: Radian,
