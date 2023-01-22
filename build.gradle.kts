@@ -35,7 +35,6 @@ kotlin {
         nodejs() {
 
         }
-        browser()
         compilations.all {
 //            kotlinOptions {
 //                sourceMap = true

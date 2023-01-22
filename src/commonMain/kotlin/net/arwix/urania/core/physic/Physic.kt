@@ -32,6 +32,7 @@ import kotlin.math.*
 // https://github.com/v170nix/astronomy-java-lib/blob/101c17e62da127a9ee8d5adc5c30e7a4d0737193/src/main/java/net/arwix/astronomy/physic/PhysicOrientation.java
 // https://bitbucket.org/v170n1x/sunexplorer.org/src/72854a8bdbcb12741971a24279ea6a560a172bfa/mobile/src/main/kotlin/org/sunexplorer/old/GraticulePath.kt?at=master#GraticulePath.kt-4
 // https://web.archive.org/web/20200512151452/http://www.hnsky.org/iau-iag.htm
+// https://astropedia.astrogeology.usgs.gov/download/Docs/WGCCRE/WGCCRE2015reprint.pdf
 
 @JsExport
 object Physic {
