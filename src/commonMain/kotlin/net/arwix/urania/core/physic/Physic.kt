@@ -142,12 +142,20 @@ object Physic {
             dotProduct(currentNorthPoleVector.phi, currentNorthPoleVector.theta, locEq.phi, locEq.theta)
         )
 
+//        val positionAngleOfAxis = (PI +
+//                atan2(
+//                    cos(northPole.declination) * sin(locEq.phi - northPole.rightAscension),
+//                    cos(northPole.declination) * sin(locEq.theta) *
+//                            cos(locEq.phi - northPole.rightAscension) -
+//                            sin(northPole.declination) * cos(locEq.theta)
+//                )).rad
+
         val positionAngleOfAxis = (PI +
                 atan2(
-                    cos(northPole.declination) * sin(locEq.phi - northPole.rightAscension),
-                    cos(northPole.declination) * sin(locEq.theta) *
-                            cos(locEq.phi - northPole.rightAscension) -
-                            sin(northPole.declination) * cos(locEq.theta)
+                    cos(currentNorthPoleVector.theta) * sin(locEq.phi - currentNorthPoleVector.phi),
+                    cos(currentNorthPoleVector.theta) * sin(locEq.theta) *
+                            cos(locEq.phi - currentNorthPoleVector.phi) -
+                            sin(currentNorthPoleVector.theta) * cos(locEq.theta)
                 )).rad
 
         var longitudeOfCentralMeridian: Radian

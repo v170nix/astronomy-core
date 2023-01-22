@@ -52,6 +52,7 @@ class PhysicElementsTest {
         assertEquals(63.87, elements.northPole.declination.toDeg().value, 1e-3)
         assertEquals(222.648529, elements.longitudeOfCentralMeridian.toDeg().value, 4e-1)
         assertEquals(-7.220366, elements.positionAngleOfPole.toDeg().value, 2e-2)
+        assertEquals(338.4361, elements.positionAngleOfAxis.toDeg().value, 2e-2)
     }
 
     @Test
@@ -82,10 +83,10 @@ class PhysicElementsTest {
         assertEquals(61.41326, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(133.434734, elements.longitudeOfCentralMeridian.toDeg().value, 2e-1)
         assertEquals(-7.518352, elements.positionAngleOfPole.toDeg().value, 2e-2)
-//        assertEquals(343.7464513346991, elements.positionAngleOfAxis.toDeg().value)
+        assertEquals(343.7807, elements.positionAngleOfAxis.toDeg().value, 2e-2)
         assertEquals(226.945782, elements.subsolarLongitude!!.toDeg().value, 2e-1)
         assertEquals(-0.007998, elements.subsolarLatitude!!.toDeg().value, 5e-3)
-//        assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
+//       assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
     }
 
     @Test
@@ -116,7 +117,7 @@ class PhysicElementsTest {
         assertEquals(67.16, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(281.646572, elements.longitudeOfCentralMeridian.toDeg().value, 3e-1)
         assertEquals(0.660804, elements.positionAngleOfPole.toDeg().value, 2e-2)
-//        assertEquals(343.7464513346991, elements.positionAngleOfAxis.toDeg().value)
+        assertEquals(339.5868, elements.positionAngleOfAxis.toDeg().value, 1e-2)
         assertEquals(273.082899, elements.subsolarLongitude!!.toDeg().value, 4e-1)
         assertEquals(2.63655, elements.subsolarLatitude!!.toDeg().value, 5e-3)
 //        assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
@@ -145,12 +146,12 @@ class PhysicElementsTest {
         assertEquals(0.8957954, elements.phase, 1e-4)
         assertEquals(6.384991, elements.angularDiameter.toDeg().value * 60.0 * 60.0, 1e-2)
         assertEquals(0.6653, elements.defectOfIllumination.toDeg().value * 60.0 * 60.0, 1e-3)
-//        assertEquals(0.926, elements.magnitude, 1e-3)
+        assertEquals(0.926, elements.magnitude, 2e-2)
         assertEquals(317.65898, elements.northPole.rightAscension.toDeg().value, 1e-2)
         assertEquals(52.87361, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(329.253289, elements.longitudeOfCentralMeridian.toDeg().value, 3e-1)
         assertEquals(-12.381792, elements.positionAngleOfPole.toDeg().value, 2e-2)
-//        assertEquals(343.7464513346991, elements.positionAngleOfAxis.toDeg().value)
+        assertEquals(322.3588, elements.positionAngleOfAxis.toDeg().value, 1e-2)
         assertEquals(295.303676, elements.subsolarLongitude!!.toDeg().value, 3e0)
         assertEquals(4.541551, elements.subsolarLatitude!!.toDeg().value, 5e-3)
 //        assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
@@ -185,7 +186,7 @@ class PhysicElementsTest {
         assertEquals(64.49702, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(201.848132, elements.longitudeOfCentralMeridian.toDeg().value, 3e-1)
         assertEquals(-0.269565, elements.positionAngleOfPole.toDeg().value, 2e-2)
-        assertEquals(340.0 + 24.0 / 60.0 + 20.0 / 60.0 / 60.0, elements.positionAngleOfAxis.toDeg().value, 2e-2)
+        assertEquals(340.3982, elements.positionAngleOfAxis.toDeg().value, 1e-2)
         assertEquals(206.412062, elements.subsolarLongitude!!.toDeg().value, 4e-1)
         assertEquals(-0.338773, elements.subsolarLatitude!!.toDeg().value, 5e-3)
 //        assertEquals(119.14675184010902, elements.brightLimbAngle!!.toDeg().value)
@@ -220,7 +221,7 @@ class PhysicElementsTest {
         assertEquals(66.89277, elements.northPole.declination.toDeg().value, 1e-2)
         assertEquals(357.652298, elements.longitudeOfCentralMeridian.toDeg().value, 3e-1)
         assertEquals(-6.228038, elements.positionAngleOfPole.toDeg().value, 2e-2)
-//        assertEquals(340.0 + 24.0 / 60.0 + 20.0 / 60.0 / 60.0, elements.positionAngleOfAxis.toDeg().value, 2e-2)
+        assertEquals(22.9675, elements.positionAngleOfAxis.toDeg().value, 1e-2)
         assertEquals(334.854834, elements.subsolarLongitude!!.toDeg().value, 4e-1)
         assertEquals(-1.531415, elements.subsolarLatitude!!.toDeg().value, 5e-3)
     }
